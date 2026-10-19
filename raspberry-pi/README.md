@@ -45,6 +45,27 @@ oneindige herstart als het opschonen van `cmdline.txt` ooit misgaat.
 Gebruik als template: `firstrun.example.sh` (vul eigen sleutel en wifi in). Zet nooit
 echte wachtwoorden in deze publieke repo.
 
+### Wifi (internet voor de Pi)
+
+De Pi heeft een NetworkManager-profiel `SynthCore` (autoconnect, hoogste prioriteit).
+Zodra hij op wifi zit heeft hij **internet** via de router, dus `apt`, `git clone` en
+VS Code-serverupdates werken. Het wifiwachtwoord staat **niet** in deze repo.
+
+Let op: de router doet **client-isolatie**. De laptop ziet de Pi via wifi op L2 (ARP werkt),
+maar ping/SSH van laptop naar Pi wordt geblokkeerd; de Pi kan wel bij de router en internet.
+SSH blijft dus via de ethernetkabel naar de laptop. Wil je kabelvrij werken, zet
+client-isolatie uit in de router of hang de Pi met een ethernetkabel aan de router.
+
+```bash
+nmcli -t -f NAME,DEVICE con show --active   # controle
+```
+
+### Tijdzone
+
+```bash
+sudo timedatectl set-timezone Europe/Brussels
+```
+
 ## Verbinden
 
 ```bash
