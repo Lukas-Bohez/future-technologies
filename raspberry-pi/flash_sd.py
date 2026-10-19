@@ -23,11 +23,22 @@ print(f"Schijf {num}: {d['Size'] / 1e9:.1f} GB, {d['BusType']}")
 
 print("Schijf wissen...")
 ps(f"Clear-Disk -Number {num} -RemoveData -RemoveOEM -Confirm:$false")
-time.sleep(2)
+time.sleep(5)
 
 print("Schrijven (kan enkele minuten duren)...")
 written = 0
-with lzma.open(image, "rb") as src, open(rf"\.\PhysicalDrive{num}", "r+b", buffering=0) as dst:
+BS = chr(92)
+dev = BS + BS + "." + BS + "PhysicalDrive" + str(num)
+for attempt in range(15):  # de kaartlezer her-enumereert na Clear-Disk
+    try:
+        dst = open(dev, "r+b", buffering=0)
+        break
+    except OSError as e:
+        print(f"wachten op {dev}: {e}")
+        time.sleep(2)
+else:
+    sys.exit("Kon de schijf niet openen.")
+with lzma.open(image, "rb") as src, dst:
     while True:
         chunk = src.read(4 * 1024 * 1024)
         if not chunk:
