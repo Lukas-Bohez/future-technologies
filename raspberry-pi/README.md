@@ -18,12 +18,14 @@ python raspberry-pi\flash_sd.py 1 <image.img of image.img.xz> <gebruiker> <wacht
 Het script:
 
 1. pakt de `.xz` uit naar `.img` (herbruikt een bestaand `.img`);
-2. zet tijdelijk `mountvol /N`, zodat Windows de nieuwe FAT-bootpartitie niet mount
-   tijdens het schrijven. Zonder dat werd de raw handle ongeldig en stopte het schrijven
-   met `Bad file descriptor` (os error 9);
-3. schrijft raw naar `\\.\PhysicalDriveN` in chunks van 4 MB, met herstel per chunk;
-4. leest de kaart terug en vergelijkt SHA256 met het image (verplicht, anders stopt het);
-5. geeft de bootpartitie een letter en plaatst `ssh`, `firstrun.sh` en de `systemd.run=`-regel
+2. wist de partitietabel met `diskpart clean` en controleert de partitietabel echt;
+3. schrijft raw met een **exclusieve** handle (`sdwrite.RawDisk`, share mode 0) in blokken
+   van 4 MB, met herstel per blok;
+4. schrijft de MBR (sector 0) **als allerlaatste**. Zolang er geen partitietabel staat,
+   mount Windows niets en blijven raw writes toegestaan. Zonder dit gaf Windows
+   `Access denied` of `Bad file descriptor` zodra het de FAT-bootpartitie herkende;
+5. leest alle geschreven blokken terug en vergelijkt ze met het image (verplicht);
+6. geeft de bootpartitie een letter en plaatst `ssh`, `firstrun.sh` en de `systemd.run=`-regel
    in `cmdline.txt`.
 
 Veiligheid: het script weigert de systeemschijf, NVMe-schijven en schijven boven 64 GB.
@@ -54,9 +56,11 @@ VS Code: Remote-SSH, host `pi` (zie `~/.ssh/config`). Zet in de VS Code-instelli
 
 ## Problemen
 
-- **`Bad file descriptor` tijdens schrijven**: opgelost door `mountvol /N` (zie boven).
-  Blijft het terugkomen, dan is de kaart of de kaartlezer waarschijnlijk defect.
-- **Kaart plots alleen-lezen**: klassiek teken van een versleten SD-kaart. Nieuwe kaart gebruiken.
+- **`Access denied` / `Bad file descriptor` tijdens schrijven**: Windows mount de nieuwe
+  FAT-bootpartitie en blokkeert dan raw writes. Opgelost door de MBR als laatste te schrijven
+  en een exclusieve handle te gebruiken (zie boven).
+- **Kaart springt op alleen-lezen**: een SD-controller doet dat na schrijffouten. Kaart eruit
+  en erin (power cycle) helpt tijdelijk. Komt het terug, gebruik een nieuwe kaart.
 - **`raspberrypi.local` werkt niet**: de Pi zit op een ander netwerk of mDNS is geblokkeerd.
   Zoek het IP in de router of via de ARP-tabel.
 - **Pi 3 zonder wifi-verbinding**: het image gebruikt NetworkManager; controleer

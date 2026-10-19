@@ -23,6 +23,8 @@ import sys
 import tempfile
 import time
 
+from sdwrite import RawDisk
+
 CHUNK = 4 * 1024 * 1024
 BS = chr(92)
 DEV_PREFIX = BS + BS + "." + BS + "PhysicalDrive"
@@ -48,18 +50,44 @@ def remove_access_paths(num):
     )
 
 
-def clear_disk(num):
+def table_empty(head):
+    return len(head) >= 512 and not any(head[446:510])
+
+
+def clear_disk(num, dev):
+    """Wist de partitietabel met diskpart en controleert de partitietabel zelf."""
     remove_access_paths(num)
-    out = ps(f"Clear-Disk -Number {num} -RemoveData -RemoveOEM -Confirm:$false -ErrorAction SilentlyContinue")
-    disk = ps_json(f"Get-Disk -Number {num} | Select PartitionStyle,Size | ConvertTo-Json")
-    if disk.get("PartitionStyle") not in (None, "RAW"):
-        print("Clear-Disk lukte niet, diskpart clean gebruiken...")
-        script = os.path.join(tempfile.gettempdir(), "sd_clean.txt")
-        with open(script, "w") as f:
-            f.write(f"select disk {num}\nclean\nexit\n")
-        r = subprocess.run(["diskpart", "/s", script], capture_output=True, text=True)
-        print((r.stdout + r.stderr).strip()[-400:])
-    return out
+    script = os.path.join(tempfile.gettempdir(), "sd_clean.txt")
+    with open(script, "w") as f:
+        f.write(f"select disk {num}\nattributes disk clear readonly\nclean\nexit\n")
+    r = subprocess.run(["diskpart", "/s", script], capture_output=True, text=True)
+    print((r.stdout + r.stderr).strip()[-500:])
+    ps(f"Update-Disk -Number {num} | Out-Null")
+    time.sleep(2)
+    disk = ps_json(f"Get-Disk -Number {num} | Select IsReadOnly | ConvertTo-Json")
+    if disk.get("IsReadOnly"):
+        sys.exit("De kaart staat op alleen-lezen. Kaart of kaartlezer is waarschijnlijk defect.")
+
+    probe = SharedDisk(dev, writable=False)
+    head = probe.read_at(0, 512)
+    probe.close()
+    if not table_empty(head):
+        print("Partitietabel staat er nog; sector 0 zelf wissen...")
+        try:
+            d = open_disk(dev)
+            d.write_at(0, bytes(512))
+            d.flush()
+            d.close()
+        except OSError as e:
+            sys.exit(f"Kan sector 0 niet schrijven ({e}). De kaart staat waarschijnlijk op "
+                     "alleen-lezen: haal de kaart eruit, steek ze opnieuw in en probeer opnieuw.")
+        probe = SharedDisk(dev, writable=False)
+        head = probe.read_at(0, 512)
+        probe.close()
+    if not table_empty(head):
+        sys.exit("De kaart weigert schrijven (partitietabel blijft staan). Haal de kaart eruit "
+                 "en steek ze opnieuw in; lukt het nog niet, gebruik een andere SD-kaart.")
+    print("Partitietabel gewist.")
 
 
 def decompress(image):
@@ -93,71 +121,129 @@ def sha256_file(path):
     return h.hexdigest()
 
 
-def open_dev(dev):
-    for _ in range(30):
+class SharedDisk:
+    """Terugvaloptie als een exclusieve handle niet lukt."""
+
+    def __init__(self, path, writable=True):
+        self.f = open(path, "r+b" if writable else "rb", buffering=0)
+
+    def write_at(self, offset, data):
+        self.f.seek(offset)
+        self.f.write(data)
+
+    def read_at(self, offset, size):
+        self.f.seek(offset)
+        return self.f.read(size)
+
+    def flush(self):
+        self.f.flush()
+
+    def close(self):
+        self.f.close()
+
+
+def open_disk(dev, writable=True):
+    try:
+        disk = RawDisk(dev, writable=writable)
+        print("exclusieve handle")
+        return disk
+    except OSError as e:
+        print(f"exclusief openen lukte niet ({e}); gedeelde handle proberen")
+        return SharedDisk(dev, writable=writable)
+
+
+GUARD = 8 * 1024 * 1024  # de partitietabel staat in sector 0; p1 begint op 8 MiB
+
+
+def segments_for(size):
+    """Schrijfvolgorde: eerst alles, de MBR (sector 0) als laatste.
+
+    Zolang sector 0 leeg is, ziet Windows geen partities, mount het niets en
+    blijven raw writes toegestaan. Zo voorkom je 'Access denied' halverwege.
+    """
+    if size > GUARD:
+        return [(GUARD, size - GUARD), (512, GUARD - 512), (0, 512)]
+    return [(512, size - 512), (0, 512)]
+
+
+def write_chunk(disk, dev, num, offset, data, state):
+    while True:
         try:
-            return open(dev, "r+b", buffering=0)
+            disk.write_at(offset, data)
+            return disk
         except OSError as e:
-            print(f"wachten op {dev}: {e}")
+            state["failures"] += 1
+            print(f"\nschrijffout bij {offset / 1e6:.0f} MB ({e}); herstel {state['failures']}")
+            if state["failures"] > 25:
+                sys.exit("Te veel schrijffouten: SD-kaart of kaartlezer is waarschijnlijk defect.")
+            try:
+                disk.close()
+            except OSError:
+                pass
+            ps("mountvol /N")
+            remove_access_paths(num)
             time.sleep(2)
-    sys.exit(f"Kon {dev} niet openen.")
+            disk = open_disk(dev)
+
+
+def compare_range(disk, img, offset, length):
+    with open(img, "rb") as src:
+        src.seek(offset)
+        pos = 0
+        while pos < length:
+            want = min(CHUNK, length - pos)
+            if disk.read_at(offset + pos, want) != src.read(want):
+                return False
+            pos += want
+    return True
 
 
 def write_image(dev, img, num):
     size = os.path.getsize(img)
-    written = 0
-    failures = 0
-    handle = open_dev(dev)
-    with open(img, "rb") as src:
-        while True:
-            chunk = src.read(CHUNK)
-            if not chunk:
-                break
-            while True:
-                try:
-                    handle.seek(written)
-                    handle.write(chunk)
+    segments = segments_for(size)
+    state = {"failures": 0}
+    disk = open_disk(dev)
+    disk = write_chunk(disk, dev, num, 0, bytes(512), state)  # oude partitietabel weg
+
+    done = 0
+    for offset, length in segments[:-1]:
+        pos = 0
+        with open(img, "rb") as src:
+            src.seek(offset)
+            while pos < length:
+                chunk = src.read(min(CHUNK, length - pos))
+                if not chunk:
                     break
-                except OSError as e:
-                    failures += 1
-                    print(f"\nschrijffout bij {written / 1e6:.0f} MB ({e}); herstel {failures}")
-                    if failures > 25:
-                        sys.exit("Te veel schrijffouten: SD-kaart of kaartlezer is waarschijnlijk defect.")
-                    try:
-                        handle.close()
-                    except OSError:
-                        pass
-                    # Een stiekem gemounte partitie kan de handle blokkeren.
-                    ps("mountvol /N")
-                    remove_access_paths(num)
-                    time.sleep(2)
-                    handle = open_dev(dev)
-            written += len(chunk)
-            pct = written * 100 // size
-            print(f"\r{written / 1e6:.0f} / {size / 1e6:.0f} MB ({pct}%)", end="")
-    handle.close()
-    print(f"\nKlaar met schrijven: {written / 1e6:.0f} MB")
+                disk = write_chunk(disk, dev, num, offset + pos, chunk, state)
+                pos += len(chunk)
+                done += len(chunk)
+                print(f"\r{done / 1e6:.0f} / {size / 1e6:.0f} MB", end="")
+    disk.flush()
+    print("\nVerifieren voor de partitietabel...")
+    for offset, length in segments[:-1]:
+        if not compare_range(disk, img, offset, length):
+            sys.exit("VERIFICATIE MISLUKT: het image staat niet correct op de kaart.")
+    print("  ok")
+
+    mbr_offset, mbr_len = segments[-1]
+    with open(img, "rb") as src:
+        src.seek(mbr_offset)
+        mbr = src.read(mbr_len)
+    disk = write_chunk(disk, dev, num, mbr_offset, mbr, state)
+    disk.flush()
+    disk.close()
+    print(f"Klaar met schrijven: {done / 1e6:.0f} MB")
 
 
 def verify(dev, img):
-    print("Verifieren (teruglezen + SHA256)...")
-    expected = sha256_file(img)
-    size = os.path.getsize(img)
-    h = hashlib.sha256()
-    read = 0
-    with open(dev, "rb", buffering=0) as handle:
-        while read < size:
-            chunk = handle.read(min(CHUNK, size - read))
-            if not chunk:
-                break
-            h.update(chunk)
-            read += len(chunk)
-    actual = h.hexdigest()
-    ok = read == size and actual == expected
-    print(f"  verwacht {expected}")
-    print(f"  gelezen  {actual}  ({read / 1e6:.0f} MB)")
-    if not ok:
-        sys.exit("VERIFICATIE MISLUKT: het image staat niet correct op de kaart.")
+    print("Verifieren van de partitietabel...")
+    with open(img, "rb") as src:
+        expected = src.read(512)
+    disk = SharedDisk(dev, writable=False)
+    actual = disk.read_at(0, 512)
+    disk.close()
+    if actual != expected:
+        sys.exit("VERIFICATIE MISLUKT: de partitietabel op de kaart wijkt af.")
     print("Verificatie ok.")
 
 
@@ -214,11 +300,11 @@ def main():
         print("Automatisch mounten uitzetten (voorkomt een kapotte schrijfhandle)...")
         print(" " + ps("mountvol /N"))
 
+        dev = DEV_PREFIX + str(num)
         print("Schijf wissen...")
-        clear_disk(num)
+        clear_disk(num, dev)
         time.sleep(3)
 
-        dev = DEV_PREFIX + str(num)
         print("Schrijven...")
         write_image(dev, img, num)
         verify(dev, img)
@@ -226,7 +312,7 @@ def main():
         ps("mountvol /E")
 
     print("Bootpartitie klaarzetten...")
-    ps("Update-Disk -ErrorAction SilentlyContinue | Out-Null")
+    ps(f"Update-Disk -Number {num} -ErrorAction SilentlyContinue | Out-Null")
     letter = boot_letter(num)
     if not letter:
         time.sleep(4)
