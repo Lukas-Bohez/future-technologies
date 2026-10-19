@@ -3,3 +3,5 @@ data/
 music/
 *.mp3
 Future-tech/
+__pycache__/
+*.pyc
