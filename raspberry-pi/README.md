@@ -51,6 +51,34 @@ echte wachtwoorden in deze publieke repo.
 ssh CareRoom@raspberrypi.local        # mDNS, of het IP uit de router
 ```
 
+### Direct aan de laptop (ethernet + ICS)
+
+Hangt de Pi met een ethernetkabel aan de laptop, dan geeft Windows ICS `192.168.137.1`.
+ICS-DHCP geeft in de praktijk niet altijd een lease (de Pi bleef dan zonder IPv4). Daarom
+heeft eth0 een **extra vast adres**; `ipv4.method` blijft `auto`, dus op een ander netwerk
+werkt DHCP gewoon:
+
+```bash
+sudo nmcli con mod "Wired connection 1" ipv4.addresses 192.168.137.2/24 ipv4.may-fail yes ipv4.dhcp-timeout 15
+sudo nmcli con up "Wired connection 1"
+```
+
+SSH-alias op de laptop (`~/.ssh/config`):
+
+```
+Host pi
+    HostName 192.168.137.2
+    User CareRoom
+    IdentityFile ~/.ssh/id_ed25519
+```
+
+Noodroute als het IP opnieuw verandert: zoek de Pi met zijn MAC (`B8:27:EB:...`) in
+`Get-NetNeighbor` of `arp -a`, of gebruik het IPv6 link-local adres:
+
+```bash
+ssh CareRoom@fe80::xxxx%15      # %15 = InterfaceIndex van de ethernetadapter
+```
+
 VS Code: Remote-SSH, host `pi` (zie `~/.ssh/config`). Zet in de VS Code-instellingen
 `remote.SSH.remotePlatform` op `linux` voor die host, anders blijft hij naar het platform vragen.
 
