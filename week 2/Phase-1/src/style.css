@@ -1,0 +1,57 @@
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  font-family: system-ui, sans-serif;
+  background: #0b1020;
+}
+
+#scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#hud {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  width: 288px;
+  max-height: calc(100% - 20px);
+  overflow-y: auto;
+  padding: 8px 12px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+#hud h1 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+#hud p {
+  margin: 4px 0;
+}
+#hud ul {
+  margin: 4px 0;
+  padding-left: 18px;
+}
+#hud li {
+  margin: 2px 0;
+}
+#hud .sub {
+  font-size: 0.78rem;
+  color: #c9d3e0;
+}
+#hud a {
+  color: #7cc4ff;
+}
+#klok {
+  font-variant-numeric: tabular-nums;
+  color: #c9d3e0;
+}
+#hint {
+  font-weight: 700;
+  color: #ffd640;
+}
