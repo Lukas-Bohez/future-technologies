@@ -1,0 +1,59 @@
+name: Deploy Energy Twin (week 2)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'week 2/energy-twin/**'
+      - 'week 2/Phase-1/**'
+      - '.github/workflows/deploy-energy-twin.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: week 2/energy-twin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: week 2/energy-twin/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
+      # Fase 1 is een eigen Vite-project. We bouwen het en zetten de build in
+      # de map phase-1 van dezelfde site, zodat de link in de HUD werkt.
+      - name: Fase 1 bouwen en in dezelfde site zetten
+        working-directory: week 2/Phase-1
+        run: |
+          npm ci
+          npm run build
+          mkdir -p ../energy-twin/dist/phase-1
+          cp -r dist/. ../energy-twin/dist/phase-1/
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: week 2/energy-twin/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

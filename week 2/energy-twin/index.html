@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Energy Twin</title>
+  </head>
+  <body>
+    <canvas id="scene"></canvas>
+    <div id="crosshair" aria-hidden="true"></div>
+
+    <div id="gamebar">
+      <span id="score"></span>
+      <button id="reset" type="button">Start / opnieuw</button>
+    </div>
+    <canvas id="radar" width="170" height="170" aria-label="Radar"></canvas>
+
+    <div id="touch" aria-label="Schermbediening">
+      <button id="btnUp" type="button">▲</button>
+      <button id="btnLeft" type="button">◀</button>
+      <button id="btnFire" type="button">🍃</button>
+      <button id="btnRight" type="button">▶</button>
+      <button id="btnDown" type="button">▼</button>
+    </div>
+
+    <button id="hudToggle" type="button" title="Paneel tonen/verbergen (H)">☰</button>
+    <div id="hud">
+      <h1>Operation Offshore Wind</h1>
+
+      <!-- fase 1: de losse, kale scène staat in de map phase-1 van dezelfde site -->
+      <p class="sub"><a href="./phase-1/" target="_blank" rel="noopener">Fase 1: de eerste, kale scène →</a></p>
+
+      <details open>
+        <summary>Spel: de boom-kanon</summary>
+        <p>Je boom staat vast in het midden. <b>← →</b> draait links/rechts, <b>↑ ↓</b> kijkt omhoog/omlaag, <b>spatiebalk</b> schiet bladeren. Alles draait in cirkels rond je: let op de radar. Raak de boeven (rode hoed), niet de vissers (geel) en niet je eigen windmolens, zonne-eilanden, dorp of batterij. Schoten stoppen bij het eerste ding op hun pad. Het kruisje kleurt <span class="g">groen</span> boven een boef en <span class="r">rood</span> boven iets dat je niet mag raken. 60 seconden.</p>
+      </details>
+
+      <details open>
+        <summary>Wind</summary>
+        <label>Windsnelheid: <span id="windLabel"></span>
+          <input id="wind" type="range" min="0" max="30" step="0.5" value="8" />
+        </label>
+        <label>Windrichting: <span id="windDirLabel"></span>
+          <input id="windDir" type="range" min="0" max="359" step="5" value="225" />
+        </label>
+        <p id="source">Handmatige wind (slider)</p>
+        <div class="row">
+          <button id="btnLess" type="button">Minder wind</button>
+          <button id="btnMore" type="button">Meer wind</button>
+          <button id="btnLive" type="button">Live wind + bewolking</button>
+        </div>
+        <p class="big"><span id="power">0 MW</span> · <span id="energy">0 MWh</span></p>
+        <canvas id="chart" width="260" height="70"></canvas>
+      </details>
+
+      <details open>
+        <summary>Zon</summary>
+        <div class="row">
+          <button id="btnPlay" type="button">⏸ Pauze</button>
+        </div>
+        <label>Uur van de dag: <span id="hourLabel"></span>
+          <input id="hour" type="range" min="0" max="24" step="0.05" value="10" />
+        </label>
+        <label>Datum (seizoen): <span id="seasonLabel"></span>
+          <input id="season" type="range" min="1" max="365" step="1" value="299" />
+        </label>
+        <label>Paneelhoek: <span id="tiltLabel"></span>
+          <input id="tilt" type="range" min="0" max="90" step="1" value="35" />
+        </label>
+        <label>Opstelling
+          <select id="orient">
+            <option value="south">Zuid</option>
+            <option value="ew">Oost-west</option>
+          </select>
+        </label>
+        <p id="sunInfo"></p>
+        <p class="big"><span id="solarPower">0 MW</span> · <span id="solarEnergy">0 MWh</span></p>
+        <canvas id="dayChart" width="260" height="70"></canvas>
+      </details>
+
+      <details>
+        <summary>Net, batterij en geld</summary>
+        <p>Wind + zon voeden een regio (dorp). Overschot laadt de batterij of gaat naar het net, een tekort komt uit de batterij of wordt geïmporteerd.</p>
+        <label class="inline"><input id="battery" type="checkbox" checked /> Batterij aan (80 MWh, 25 MW)</label>
+        <label>Stroomprijs: <span id="priceLabel"></span>
+          <input id="price" type="range" min="20" max="300" step="5" value="90" />
+        </label>
+        <p id="gridInfo"></p>
+        <canvas id="gridChart" width="260" height="70"></canvas>
+        <p id="legendGrid" class="legend"><span style="color:#fff">▬ verbruik</span> <span style="color:#7CFC9A">▬ productie</span></p>
+        <p id="moneyInfo"></p>
+        <p id="co2"></p>
+      </details>
+
+      <details id="secScen">
+        <summary>Scenario's vergelijken</summary>
+        <p>Vergelijkt voor de gekozen datum, paneelhoek, bewolking en huidige wind twee scenario's, elk over een hele dag.</p>
+        <div class="row"><button id="btnCompare" type="button">Vergelijk</button></div>
+        <canvas id="scenChart" width="260" height="70"></canvas>
+        <p class="legend"><span style="color:#ffd640">▬ zuid</span> <span style="color:#4fd1ff">▬ oost-west</span></p>
+        <div id="scenTable"></div>
+      </details>
+
+      <details>
+        <summary>Assistent</summary>
+        <p>Stel een vraag over de actuele waarden, bv. "waarom is de opbrengst laag?" of "geef me een tip".</p>
+        <form id="askForm" class="row">
+          <input id="askInput" type="text" placeholder="Vraag…" autocomplete="off" />
+          <button type="submit">Vraag</button>
+        </form>
+        <p id="askLog">Typ "help" voor voorbeelden.</p>
+        <label>Optioneel: eigen Claude API-sleutel (blijft alleen in dit venster)
+          <input id="apiKey" type="password" autocomplete="off" placeholder="sk-ant-…" />
+        </label>
+      </details>
+
+      <details>
+        <summary>Hardware en VR</summary>
+        <p>Koppel een ESP32 of Arduino met een windsensor (Web Serial) of test met een gesimuleerde sensor. VR: knop onderaan (WebXR, headset nodig).</p>
+        <div class="row">
+          <button id="btnSerial" type="button">Koppel sensor (USB)</button>
+          <button id="btnSimSensor" type="button">Simuleer sensor</button>
+        </div>
+        <p id="hwStatus">Geen sensor.</p>
+      </details>
+
+      <details>
+        <summary>Spraak</summary>
+        <div class="row">
+          <button id="mic" type="button">🎤 Spreek</button>
+          <button id="btnAsk" type="button">Hoeveel energie?</button>
+          <button id="btnAskSolar" type="button">Hoeveel zon?</button>
+        </div>
+        <p id="voiceLog">Zeg bv. "meer wind", "wind uit het zuidwesten", "zet de zon op 15 uur", "batterij uit", "zet de panelen oost-west", "hoeveel geld besparen we". Andere zinnen krijgt de assistent.</p>
+      </details>
+    </div>
+    <div id="card" hidden></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,228 @@
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  font-family: system-ui, sans-serif;
+  background: #0b1020;
+}
+
+#scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- kruisje in het midden ---- */
+#crosshair {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  pointer-events: none;
+  --c: #fff;
+}
+#crosshair::before,
+#crosshair::after {
+  content: '';
+  position: absolute;
+  background: var(--c);
+  box-shadow: 0 0 3px #000;
+}
+#crosshair::before {
+  left: 13px;
+  top: 0;
+  width: 2px;
+  height: 28px;
+}
+#crosshair::after {
+  top: 13px;
+  left: 0;
+  height: 2px;
+  width: 28px;
+}
+#crosshair.villain {
+  --c: #3bff6a;
+}
+#crosshair.avoid {
+  --c: #ff3b3b;
+}
+
+/* ---- scorebalk en radar ---- */
+#gamebar {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 12px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+#radar {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: 170px;
+  height: 170px;
+}
+
+#card {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  max-width: 320px;
+  padding: 10px 14px;
+  color: #fff;
+  background: rgba(160, 20, 20, 0.88);
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+#card[hidden] {
+  display: none;
+}
+
+/* ---- schermknoppen ---- */
+#touch {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  opacity: 0.8;
+}
+#touch button {
+  width: 52px;
+  height: 52px;
+  font-size: 1.3rem;
+  border-radius: 10px;
+  touch-action: none;
+}
+
+/* ---- paneel links ---- */
+#hudToggle {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 3;
+}
+#hud {
+  position: fixed;
+  top: 44px;
+  left: 10px;
+  width: 292px;
+  max-height: calc(100% - 60px);
+  overflow-y: auto;
+  padding: 8px 12px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+#hud.hidden {
+  display: none;
+}
+#hud h1 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+#hud a {
+  color: #7cc4ff;
+}
+#hud .sub {
+  font-size: 0.78rem;
+  color: #c9d3e0;
+}
+#hud p {
+  margin: 4px 0;
+}
+#hud summary {
+  cursor: pointer;
+  font-weight: 700;
+  padding: 4px 0;
+}
+#hud details {
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 2px 0 6px;
+}
+#hud .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0;
+}
+#hud .big {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+#hud canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  display: block;
+}
+#hud label {
+  display: block;
+  margin: 4px 0;
+}
+#hud label.inline {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+#hud input[type='range'],
+#hud select,
+#hud input[type='text'],
+#hud input[type='password'] {
+  width: 100%;
+  box-sizing: border-box;
+}
+#hud .legend {
+  font-size: 0.75rem;
+}
+#hud table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+#hud th,
+#hud td {
+  text-align: right;
+  padding: 2px 3px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+#hud th:first-child,
+#hud td:first-child {
+  text-align: left;
+}
+.g {
+  color: #3bff6a;
+}
+.r {
+  color: #ff6b6b;
+}
+
+@media (pointer: fine) {
+  #touch {
+    display: none; /* met muis en toetsenbord heb je de schermknoppen niet nodig */
+  }
+}
+
+@media (max-width: 700px) {
+  #hud {
+    width: calc(100% - 20px);
+    max-height: 45%;
+  }
+  #radar {
+    width: 120px;
+    height: 120px;
+  }
+}
