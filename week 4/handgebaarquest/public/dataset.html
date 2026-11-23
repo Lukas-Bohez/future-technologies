@@ -22,9 +22,10 @@
       <div>
         <div class="viewfinder">
           <video id="camera" class="private-camera" playsinline muted autoplay hidden></video>
-          <canvas id="capture-preview" width="448" height="448" aria-label="Handvoorbeeld van je webcam" hidden></canvas>
+          <canvas id="capture-preview" width="640" height="360" aria-label="Live camerabeeld met kadreringshulp" hidden></canvas>
           <p id="placeholder">Webcam staat uit</p>
         </div>
+        <p id="camera-guide" class="camera-guide" hidden></p>
         <img id="recent" class="preview-photo" alt="Laatst gemaakte foto" hidden>
       </div>
       <div class="capture-grid">

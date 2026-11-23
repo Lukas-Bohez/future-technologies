@@ -2,33 +2,41 @@ const mediapipe = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21'
 const models = 'https://storage.googleapis.com/mediapipe-models/';
 
 export async function createHandFilter(runningMode = 'IMAGE') {
-  const { FilesetResolver, HandLandmarker, FaceDetector } = await import(mediapipe + '/vision_bundle.mjs');
+  const { FilesetResolver, HandLandmarker, FaceLandmarker } = await import(mediapipe + '/vision_bundle.mjs');
   const wasm = await FilesetResolver.forVisionTasks(mediapipe + '/wasm');
   const [hands, faces] = await Promise.all([
     HandLandmarker.createFromOptions(wasm, {
       runningMode, numHands: 1, minHandDetectionConfidence: 0.45,
       baseOptions: { modelAssetPath: models + 'hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task' },
     }),
-    FaceDetector.createFromOptions(wasm, {
-      runningMode, minDetectionConfidence: 0.4,
-      baseOptions: { modelAssetPath: models + 'face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite' },
+    FaceLandmarker.createFromOptions(wasm, {
+      runningMode, numFaces: 3, minFacePresenceConfidence: 0.6,
+      baseOptions: { modelAssetPath: models + 'face_landmarker/face_landmarker/float16/1/face_landmarker.task' },
     }),
   ]);
+  let lastTimestamp = -1;
   return {
-    crop(source, canvas, timestamp) {
+    crop(source, canvas, timestamp, preview) {
       const width = source.videoWidth || source.width;
       const height = source.videoHeight || source.height;
+      if (timestamp !== undefined) {
+        timestamp = Math.max(timestamp, lastTimestamp + 0.1);
+        lastTimestamp = timestamp;
+      }
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = '#141b29';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       const result = timestamp === undefined ? hands.detect(source) : hands.detectForVideo(source, timestamp);
-      if (!result.landmarks.length) return { status: 'no-hand' };
       const points = result.landmarks[0];
-      const hand = handBounds(points, width, height);
-      if (!hand) return { status: 'clipped' };
+      const hand = points && handBounds(points, width, height);
+      if (!hand && !preview) return { status: points ? 'clipped' : 'no-hand' };
       const facesResult = timestamp === undefined ? faces.detect(source) : faces.detectForVideo(source, timestamp);
-      const visibleFaces = facesResult.detections.map(face => face.boundingBox).filter(face => face && overlapsFace(hand, face));
-      if (visibleFaces.some(face => points.some(point => pointInFace(point, face, width, height)))) return { status: 'face' };
+      const detectedFaces = facesResult.faceLandmarks.map(face => faceBounds(face, width, height));
+      const visibleFaces = hand ? detectedFaces.filter(face => overlapsFace(hand, face)) : [];
+      const faceOverlap = visibleFaces.some(face => points.some(point => pointInFace(point, face, width, height)));
+      if (preview) drawFramingPreview(source, preview, width, height, detectedFaces, hand, faceOverlap);
+      if (!hand) return { status: points ? 'clipped' : 'no-hand' };
+      if (faceOverlap) return { status: 'face' };
       ctx.drawImage(source, hand.x, hand.y, hand.side, hand.side, 0, 0, canvas.width, canvas.height);
       for (const face of visibleFaces) {
         const pad = face.width * 0.1;
@@ -41,6 +49,42 @@ export async function createHandFilter(runningMode = 'IMAGE') {
     },
     close() { hands.close(); faces.close(); },
   };
+}
+
+function faceBounds(points, width, height) {
+  const xs = points.map(point => point.x * width);
+  const ys = points.map(point => point.y * height);
+  const originX = Math.min(...xs);
+  const originY = Math.min(...ys);
+  return { originX, originY, width: Math.max(...xs) - originX, height: Math.max(...ys) - originY };
+}
+
+function drawFramingPreview(source, canvas, width, height, faces, hand, faceOverlap) {
+  const ctx = canvas.getContext('2d');
+  const scale = Math.min(canvas.width / width, canvas.height / height);
+  const x = (canvas.width - width * scale) / 2;
+  const y = (canvas.height - height * scale) / 2;
+  ctx.fillStyle = '#141b29';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(source, x, y, width * scale, height * scale);
+  for (const face of faces) {
+    const pad = face.width * 0.15;
+    ctx.fillRect(x + (face.originX - pad) * scale, y + (face.originY - pad) * scale,
+      (face.width + 2 * pad) * scale, (face.height + 2 * pad) * scale);
+  }
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = hand && !faceOverlap ? '#dcfa7c' : '#f5f7ff';
+  ctx.setLineDash(hand && !faceOverlap ? [] : [8, 6]);
+  if (hand && !faceOverlap) ctx.strokeRect(x + hand.x * scale, y + hand.y * scale, hand.side * scale, hand.side * scale);
+  else ctx.strokeRect(x + width * scale * 0.18, y + height * scale * 0.33, width * scale * 0.64, height * scale * 0.59);
+  ctx.setLineDash([]);
+}
+
+export function framingMessage(status) {
+  if (status === 'hand') return 'Hand in beeld.';
+  if (status === 'face') return 'Breng je hand naast of onder je gezicht.';
+  if (status === 'clipped') return 'Zet je hele hand in het kader.';
+  return 'Hou je hand in het stippelkader.';
 }
 
 export function handBounds(points, width, height) {

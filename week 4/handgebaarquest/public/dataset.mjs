@@ -1,11 +1,14 @@
 import { closeCamera, openCamera } from './camera.mjs';
 import { hints, labels, TRAINING_MINIMUM } from './quest.mjs';
 import { readTrainingPhotos, trainLocal } from './trainer.mjs';
-import { createHandFilter, rankShapes } from './hands.mjs';
+import { createHandFilter, framingMessage, rankShapes } from './hands.mjs';
 
 const get = id => document.getElementById(id);
 const video = get('camera');
-const canvas = get('capture-preview');
+const preview = get('capture-preview');
+const guide = get('camera-guide');
+const canvas = document.createElement('canvas');
+canvas.width = canvas.height = 448;
 let latest;
 let active = true;
 let ready = false;
@@ -27,7 +30,8 @@ function updateCamera() {
   get('split').disabled = busy;
   get('auto-start').disabled = !ready || busy;
   get('auto-stop').hidden = !automatic;
-  canvas.hidden = video.hidden;
+  preview.hidden = video.hidden;
+  guide.hidden = video.hidden;
 }
 
 function updateCounts(value) {
@@ -87,6 +91,7 @@ async function savePhoto(split, label, signal) {
 }
 
 async function startCamera() {
+  message('Hand- en gezichtsfilter laden…');
   filter ??= await createHandFilter('VIDEO');
   if (!active || automatic?.signal.aborted) return;
   await openCamera(video, 'user');
@@ -95,14 +100,26 @@ async function startCamera() {
     return;
   }
   clearInterval(previewTimer);
-  previewTimer = setInterval(() => {
-    if (!video.hidden && video.readyState >= 2) filter.crop(video, canvas, performance.now());
-  }, 240);
+  const renderPreview = () => {
+    if (video.hidden || video.readyState < 2 || !video.videoWidth) return;
+    try {
+      const { status } = filter.crop(video, canvas, performance.now(), preview);
+      guide.textContent = framingMessage(status);
+    } catch {
+      stopCamera();
+      updateCamera();
+      message('De camerafilter is gestopt. Zet de webcam opnieuw aan om het opnieuw te proberen.');
+    }
+  };
+  guide.textContent = 'Camerabeeld ophalen…';
+  renderPreview();
+  if (!video.hidden) previewTimer = setInterval(renderPreview, 150);
 }
 
 function stopCamera() {
   clearInterval(previewTimer);
   closeCamera(video);
+  preview.getContext('2d').clearRect(0, 0, preview.width, preview.height);
 }
 
 get('camera-button').addEventListener('click', async () => {
@@ -111,7 +128,8 @@ get('camera-button').addEventListener('click', async () => {
   try {
     if (video.hidden) await startCamera();
     else stopCamera();
-    message(video.hidden ? 'Webcam staat uit.' : 'Hou je hele hand in het beeld en klik op Maak foto.');
+    if (!video.hidden) message('Klik op Maak foto zodra je hele hand in het groene kader zit.');
+    else if (!get('status').textContent.includes('camerafilter is gestopt')) message('Webcam staat uit.');
   } catch (error) {
     message(error.message);
   } finally {

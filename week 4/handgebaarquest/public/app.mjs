@@ -1,7 +1,7 @@
 import { closeCamera, openCamera } from './camera.mjs';
 import { hints, targets, THRESHOLD } from './quest.mjs';
 import { loadModel } from './model.mjs';
-import { createHandFilter, rankShapes } from './hands.mjs';
+import { createHandFilter, framingMessage, rankShapes } from './hands.mjs';
 
 const byId = id => document.getElementById(id);
 const loopback = ['127.0.0.1', 'localhost'].includes(location.hostname);
@@ -10,7 +10,9 @@ const video = byId('camera');
 const button = byId('action');
 const stop = byId('stop');
 const status = byId('status');
-const canvas = byId('hand-preview');
+const cameraPreview = byId('hand-preview');
+const canvas = document.createElement('canvas');
+canvas.width = canvas.height = 224;
 const storageKey = preview ? 'handalfabet-simulatie' : 'handalfabet';
 let target;
 let pending;
@@ -30,7 +32,7 @@ function controls(message) {
   if (message) status.textContent = message;
   button.disabled = busy;
   stop.hidden = !watching;
-  canvas.hidden = video.hidden;
+  cameraPreview.hidden = video.hidden;
   byId('placeholder').hidden = !video.hidden;
   button.hidden = watching || preview;
   button.textContent = !target ? 'Opdracht ophalen' : 'Start camera';
@@ -87,7 +89,7 @@ async function predict() {
   if (preview) return { mode: 'Testzekerheid', predictions: [{ className: byId('prediction').value, probability: 0.97 }] };
   if (video.readyState < 2 || video.currentTime === lastVideoTime) return;
   lastVideoTime = video.currentTime;
-  const isolated = handFilter.crop(video, canvas, performance.now());
+  const isolated = handFilter.crop(video, canvas, performance.now(), cameraPreview);
   if (isolated.status !== 'hand') return { status: isolated.status };
   if (model?.getMetadata()?.userMetadata?.preprocessing === 'hand-crop-v1') {
     return { mode: 'Modelzekerheid', predictions: await model.predict(canvas) };
@@ -107,9 +109,7 @@ async function watch(session) {
       frames = correct ? [...frames.slice(-2), best.probability] : [];
     } else if (result) {
       frames = [];
-      const guidance = result.status === 'face' ? 'Hou je hand naast of onder je gezicht' :
-        result.status === 'clipped' ? 'Breng je hele hand dichterbij en in beeld' : 'Geen hand';
-      showRecognition(guidance, undefined, 'Zekerheid');
+      showRecognition(framingMessage(result.status), undefined, 'Zekerheid');
     }
     if (!pending && target && frames.length === 3) {
       pending = { id: crypto.randomUUID(), target, confidence: Math.min(...frames) };
@@ -147,6 +147,7 @@ function stopScanning(message) {
   enrollment++;
   clearTimeout(timer);
   closeCamera(video);
+  cameraPreview.getContext('2d').clearRect(0, 0, cameraPreview.width, cameraPreview.height);
   canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
   showRecognition('–', undefined, 'Zekerheid');
   controls(message);
