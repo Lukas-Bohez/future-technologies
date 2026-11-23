@@ -1,4 +1,5 @@
 export const THRESHOLD = 0.90;
+export const TRAINING_MINIMUM = 30;
 export const targets = ['V', 'O', 'L'];
 export const labels = [...targets, 'Overig'];
 export const hints = {

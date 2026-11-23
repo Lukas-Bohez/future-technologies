@@ -1,10 +1,41 @@
-import { mkdir, readdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { labels } from '../public/quest.mjs';
 
-const root = new URL('../dataset/', import.meta.url);
+export const root = new URL('../../opruimquest/trainingdata/', import.meta.url);
 const splits = ['training', 'test'];
 const photos = /\.(jpe?g|png|webp)$/i;
+const localFile = /^[a-z\d_-][a-z\d_.-]*\.(jpe?g|png|webp)$/i;
+const trainingFolder = label => new URL('training/' + label + '/', root);
+
+export async function trainingManifest() {
+  const entries = await Promise.all(labels.map(async label => {
+    const files = await readdir(trainingFolder(label), { withFileTypes: true }).catch(error => {
+      if (error.code === 'ENOENT') return [];
+      throw error;
+    });
+    const names = files.filter(file => file.isFile() && localFile.test(file.name)).map(file => file.name).sort();
+    return [label, names];
+  }));
+  return Object.fromEntries(entries);
+}
+
+export async function handleTrainingPhoto(request, response, origin) {
+  if (request.method !== 'GET' || request.headers['x-handquest-local'] !== 'training') {
+    response.writeHead(403).end();
+    return;
+  }
+  const { searchParams } = new URL(request.url, origin);
+  const label = searchParams.get('label');
+  const filename = searchParams.get('file');
+  if (!labels.includes(label) || !localFile.test(filename)) {
+    response.writeHead(400).end();
+    return;
+  }
+  const photo = await readFile(new URL(filename, trainingFolder(label)));
+  const mime = filename.endsWith('.png') ? 'image/png' : filename.endsWith('.webp') ? 'image/webp' : 'image/jpeg';
+  response.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'no-store' }).end(photo);
+}
 
 function countFiles(folder) {
   return readdir(folder, { withFileTypes: true }).then(

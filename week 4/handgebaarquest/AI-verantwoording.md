@@ -8,6 +8,8 @@ Een vervolgprompt was:
 
 Codex stelde **V**, **O** en **L** uit het Vlaamse handalfabet voor. Het bouwde de spelmodus, fotostand en lokale evaluatiepagina. Codex bekeek de teruggevonden eigen foto’s, hield de originele reeks lokaal apart en selecteerde vier handuitsneden als **Overig**. De illustratie voor de handvormen komt van het Vlaams GebarentaalCentrum. De drempel van 90% en drie opeenvolgende beelden zijn keuzes van Codex.
 
+Ik vroeg vervolgens om automatische foto-opnames en training met een voorbeeld van ieder gebaar. Codex voegde een aftelling, voorbeelden uit het handalfabet en een automatische TensorFlow.js-export toe. Ik volg de getoonde handvormen zelf en verzamel de testbeelden apart.
+
 ## Mijn eigen werk
 
 Vul aan wanneer en hoe je de nieuwe foto’s maakte, hoe je het model trainde en wat je op je smartphone en tijdens de hertests vaststelde. Vermeld je eigen wijzigingen en eventuele vervolgprompts.

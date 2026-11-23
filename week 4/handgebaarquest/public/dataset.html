@@ -12,7 +12,12 @@
     <p class="brand">Handgebaarquest</p>
     <h1>Trainings- en testfoto’s maken</h1>
     <nav class="local-nav" aria-label="Handgebaarquest"><a href="./">Terug naar het spel</a><a href="./evaluatie.html">Model evalueren</a></nav>
-    <p class="intro">Fotografeer je hele hand met de webcam. Elke bevestigde foto staat meteen in de map <strong>dataset</strong> van dit project.</p>
+    <p class="intro">Elke bevestigde foto staat meteen in <strong>opruimquest/trainingdata</strong> op je pc.</p>
+    <section class="notice" aria-label="Automatische training">
+      <p>Start de webcam en volg de voorbeelden. De app neemt foto’s per klasse en traint automatisch zodra er genoeg zijn. Hou je gezicht en omstanders buiten beeld.</p>
+      <button id="auto-start" type="button" disabled>Start automatische training</button>
+      <button id="auto-stop" class="secondary" type="button" hidden>Stop automatische training</button>
+    </section>
     <div class="dataset">
       <div>
         <div class="viewfinder">
@@ -34,6 +39,9 @@
           <option>L</option>
           <option>Overig</option>
         </select>
+        <svg id="example" class="gesture-example" viewBox="645 215 79 105" role="img" aria-label="Handvorm V">
+          <image href="./handalfabet.png" width="960" height="541"></image>
+        </svg>
         <small id="hint"></small>
         <button id="camera-button" class="secondary" type="button" disabled>Start webcam</button>
         <button id="capture" type="button" disabled>Maak foto</button>
@@ -41,7 +49,7 @@
         <ul id="counts" class="counts" aria-label="Aantal foto’s per klasse"></ul>
       </div>
     </div>
-    <p class="notice">Houd je gezicht buiten beeld. Maak testfoto’s in een aparte sessie, bijvoorbeeld met ander licht of een andere achtergrond. Gebruik de map <strong>test</strong> alleen om je model te evalueren.</p>
+    <p class="notice">Maak na de training aparte testfoto’s bij ander licht of met een andere achtergrond. Gebruik <strong>trainingdata/test</strong> alleen voor je evaluatie.</p>
     <details>
       <summary>Bekijk het Vlaamse handalfabet</summary>
       <img class="reference" src="./handalfabet.png" alt="Overzicht van het volledige Vlaamse handalfabet met tekeningen van de handvormen">

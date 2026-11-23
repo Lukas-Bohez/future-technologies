@@ -51,7 +51,7 @@ get('images').addEventListener('change', () => {
   get('evaluate').disabled = !files.length;
   get('report').hidden = true;
   get('results').replaceChildren();
-  get('status').textContent = files.length ? files.length + ' testfoto’s gevonden.' : 'Kies de map dataset/test met submappen V, O, L en Overig.';
+  get('status').textContent = files.length ? files.length + ' testfoto’s gevonden.' : 'Kies trainingdata/test met submappen V, O, L en Overig.';
 });
 
 get('evaluate').addEventListener('click', async () => {

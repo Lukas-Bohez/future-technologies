@@ -6,12 +6,13 @@ Spel **VOL** met drie letters uit het Vlaamse handalfabet. Elke herkende letter 
 
 ## Foto’s maken en het model trainen
 
-1. Open de [lokale fotostand](http://127.0.0.1:4174/dataset.html). Staat de server uit? Dubbelklik op **Start lokaal.cmd** of gebruik npm start met Node.js 22.13 of hoger.
-2. Kies **Training** of **Aparte test**. Kies daarna **V**, **O**, **L** of **Overig** en start je webcam. Elke bevestigde foto staat meteen in dataset/training of dataset/test onder de juiste klasse. Open bij twijfel het Vlaamse handalfabet onderaan de fotostand.
-3. Verzamel minstens 30 trainingsfoto’s per klasse, met wisselend licht, afstand, hoek en achtergrond. Houd gezicht en omstanders buiten beeld. Neem de vier eerder gecontroleerde uitsneden alleen mee voor **Overig**. Maak ook nieuwe beelden van een lege achtergrond, een ontspannen hand en andere lettervormen.
-4. Neem ongeveer 10 afzonderlijke testfoto’s per klasse in een andere sessie. Gebruik waar mogelijk andere belichting, een andere hoek of een andere hand. Laat deze testmap buiten je training.
-5. Open [Teachable Machine](https://teachablemachine.withgoogle.com/train/image). Kies **Image Project → Standard image model**. Maak de klassen **V**, **O**, **L** en **Overig**, voeg per klasse de eigen trainingsfoto’s toe en klik op **Train Model**.
-6. Kies **Export Model → TensorFlow.js → Download my model**. Plaats model.json, metadata.json en alle .bin-gewichten in public/model. Open de [gewone app](http://127.0.0.1:4174/) en probeer het echte model. Voor het laden van de modelbibliotheken heeft de browser internet nodig.
+1. Open de [lokale trainingsstand](http://127.0.0.1:4174/dataset.html). Dubbelklik zo nodig op **Start lokaal.cmd** of gebruik npm start met Node.js 22.13 of hoger.
+2. Klik op **Start automatische training** en geef toegang tot de webcam. De pagina toont per ronde de handvorm, telt vijf seconden af en neemt maximaal vijf foto’s per keer. Laat de hele hand zien, wissel per foto lichtjes van hoek of afstand en houd gezicht en omstanders buiten beeld. Voor **Overig** toon je een lege achtergrond, een ontspannen hand of een andere lettervorm.
+3. De app bewaart beelden in **opruimquest/trainingdata/training/** per klasse. Bij minstens 30 voorbeelden per klasse traint de browser een TensorFlow.js-model met de Teachable Machine-bibliotheek. De bibliotheek en het MobileNet-startmodel vereisen internet. De opnames blijven lokaal. Na het stoppen kun je de sessie hervatten vanaf de opgeslagen teller.
+4. Open na afloop de [gewone app](http://127.0.0.1:4174/) om de gegenereerde export te gebruiken. De modelmap verschijnt in de statusregel. Voor Netlify kopieer je model.json, metadata.json en weights.bin uit die lokale exportmap naar **public/model/**.
+5. Maak ongeveer 10 afzonderlijke testfoto’s per klasse in een andere sessie. Gebruik in de fotostand **Aparte test** en varieer de achtergrond, belichting en hand. De automatische training leest uitsluitend de trainingsmap.
+
+Je kunt ook handmatig trainen via [Teachable Machine](https://teachablemachine.withgoogle.com/train/image) met **Image Project → Standard image model**, dezelfde vier klassen en de foto’s uit **trainingdata/training/**.
 
 ## Evalueren en indienen
 
