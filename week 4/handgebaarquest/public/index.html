@@ -14,7 +14,7 @@
       <div><p class="brand">Campus Quest</p><h1>Handgebaarquest</h1></div>
       <div class="score" aria-label="Punten"><strong id="points">–</strong><span>punten</span></div>
     </header>
-    <p class="intro">Spel <strong>VOL</strong> met drie letters uit het Vlaamse handalfabet. Hou elke handvorm stil tijdens de scan.</p>
+    <p class="intro">Spel <strong>VOL</strong> met drie letters uit het Vlaamse handalfabet. Na het starten kijkt de app doorlopend naar je hand.</p>
     <p id="file-help" class="notice" hidden>Dubbelklik op <strong>Start lokaal.cmd</strong> in de projectmap en open daarna de <a href="http://127.0.0.1:4174/">lokale app</a>.</p>
     <nav id="local-nav" class="local-nav" hidden aria-label="Lokale hulpmiddelen">
       <a href="./dataset.html">Trainings- en testfoto’s maken</a>
@@ -38,9 +38,14 @@
       </select>
     </section>
     <div id="viewfinder" class="viewfinder">
-      <video id="camera" playsinline muted autoplay hidden></video>
+      <video id="camera" class="private-camera" playsinline muted autoplay hidden></video>
+      <canvas id="hand-preview" width="224" height="224" aria-label="Uitgesneden hand" hidden></canvas>
       <p id="placeholder">Camera staat uit</p>
     </div>
+    <section class="live-result" aria-label="Live herkenning">
+      <span>Herkent</span><strong id="recognized">–</strong>
+      <span id="confidence-label">Zekerheid</span><strong id="confidence">–</strong>
+    </section>
     <p id="status" class="status" role="status">Punten en volgende opdracht ophalen…</p>
     <button id="action" type="button" disabled>Start camera</button>
     <button id="stop" class="secondary" type="button" hidden>Camera uitzetten</button>

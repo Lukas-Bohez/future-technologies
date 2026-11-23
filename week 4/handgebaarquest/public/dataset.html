@@ -21,7 +21,8 @@
     <div class="dataset">
       <div>
         <div class="viewfinder">
-          <video id="camera" playsinline muted autoplay hidden></video>
+          <video id="camera" class="private-camera" playsinline muted autoplay hidden></video>
+          <canvas id="capture-preview" width="448" height="448" aria-label="Handvoorbeeld van je webcam" hidden></canvas>
           <p id="placeholder">Webcam staat uit</p>
         </div>
         <img id="recent" class="preview-photo" alt="Laatst gemaakte foto" hidden>
@@ -45,6 +46,7 @@
         <small id="hint"></small>
         <button id="camera-button" class="secondary" type="button" disabled>Start webcam</button>
         <button id="capture" type="button" disabled>Maak foto</button>
+        <button id="audit" class="secondary" type="button" disabled>Controleer foto’s en zet onbruikbare apart</button>
         <div id="status" role="status">Kies een klasse en start je webcam.</div>
         <ul id="counts" class="counts" aria-label="Aantal foto’s per klasse"></ul>
       </div>

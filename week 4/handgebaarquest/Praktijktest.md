@@ -4,6 +4,8 @@
 
 Op mijn laptop kon ik in de eerste versie geen foto’s in de app bewaren. De bediening was te veel op een telefoon gericht. Ik had ook enkele beelden onder het verkeerde klasse-label gezet. In de nieuwe fotostand zie ik per klasse hoeveel bestanden echt op schijf staan. De eerste reeks bleef lokaal bewaard. Vier duidelijke handuitsneden zijn geselecteerd als training voor **Overig**. Van de oude opnames wordt niets gebruikt als aparte testfoto.
 
+In de eerste automatische sessie waren 26 foto’s met een zichtbare **L** onder **Overig** opgeslagen. Ze zijn apart gezet. In een aantal O-foto’s zat de hand dicht tegen het gezicht. De app gebruikt nu de handuitsnede. Een gedetecteerd gezicht aan de rand wordt afgedekt. Bij overlap met de hand wordt het beeld geweigerd. De handfilter hield 6 V-, 12 O-, 3 L- en 2 Overig-foto’s over. Met de aangepaste handvormregels werden daarvan 6 V-, 11 O-, 3 L- en 2 Overig-foto’s juist ingedeeld. Dit zijn controlecijfers op beelden die voor de aanpassing zijn bekeken. Gebruik nieuwe foto’s voor een onafhankelijke hertest van het getrainde model.
+
 | Klasse | Trainingsfoto’s | Onafhankelijke testfoto’s | Licht, hoek, achtergrond en hand |
 | --- | --- | --- | --- |
 | V | … | … | … |

@@ -1,17 +1,19 @@
-import { captureSquare, closeCamera, openCamera } from './camera.mjs';
+import { closeCamera, openCamera } from './camera.mjs';
 import { hints, labels, TRAINING_MINIMUM } from './quest.mjs';
-import { trainLocal } from './trainer.mjs';
+import { readTrainingPhotos, trainLocal } from './trainer.mjs';
+import { createHandFilter, rankShapes } from './hands.mjs';
 
 const get = id => document.getElementById(id);
 const video = get('camera');
-const canvas = document.createElement('canvas');
-canvas.width = canvas.height = 448;
+const canvas = get('capture-preview');
 let latest;
 let active = true;
 let ready = false;
 let busy = false;
 let automatic;
 let counts;
+let filter;
+let previewTimer;
 const examples = { V: '645 215 79 105', O: '375 340 80 90', L: '123 320 80 103' };
 
 function message(text) { get('status').textContent = text; }
@@ -20,10 +22,12 @@ function updateCamera() {
   get('camera-button').textContent = video.hidden ? 'Start webcam' : 'Zet webcam uit';
   get('camera-button').disabled = !ready || busy;
   get('capture').disabled = !ready || busy || video.hidden;
+  get('audit').disabled = !ready || busy;
   get('label').disabled = busy;
   get('split').disabled = busy;
   get('auto-start').disabled = !ready || busy;
   get('auto-stop').hidden = !automatic;
+  canvas.hidden = video.hidden;
 }
 
 function updateCounts(value) {
@@ -62,29 +66,51 @@ get('label').addEventListener('change', showExample);
 showExample();
 
 async function savePhoto(split, label, signal) {
-  captureSquare(video, canvas);
-  try {
-    const photo = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.88));
-    if (!photo) throw new Error('Het beeld kon niet worden opgeslagen.');
-    const result = await api('?' + new URLSearchParams({ split, label }), photo, signal);
-    if (latest) URL.revokeObjectURL(latest);
-    latest = URL.createObjectURL(photo);
-    get('recent').src = latest;
-    get('recent').hidden = false;
-    updateCounts(result.counts);
-    return result.filename;
-  } finally {
-    canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+  if (video.readyState < 2) throw new Error('Wacht tot je hand in beeld komt.');
+  const result = filter.crop(video, canvas, performance.now());
+  if (result.status !== 'hand') {
+    const guidance = result.status === 'face' ? 'Zet je hand naast of onder je gezicht.' : 'Hou je hele hand dichter bij de webcam.';
+    return { guidance };
   }
+  const clearOtherLetter = rankShapes(result.points).find(item =>
+    item.className !== 'Overig' && item.className !== label && item.probability >= 0.90);
+  if (clearOtherLetter) return { guidance: 'Dit lijkt duidelijk op ' + clearOtherLetter.className + '. Volg het voorbeeld voor ' + label + '.' };
+  const photo = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.88));
+  if (!photo) throw new Error('Het beeld kon niet worden opgeslagen.');
+  const saved = await api('?' + new URLSearchParams({ split, label }), photo, signal);
+  if (latest) URL.revokeObjectURL(latest);
+  latest = URL.createObjectURL(photo);
+  get('recent').src = latest;
+  get('recent').hidden = false;
+  updateCounts(saved.counts);
+  return { filename: saved.filename };
+}
+
+async function startCamera() {
+  filter ??= await createHandFilter('VIDEO');
+  if (!active || automatic?.signal.aborted) return;
+  await openCamera(video, 'user');
+  if (!active || automatic?.signal.aborted) {
+    closeCamera(video);
+    return;
+  }
+  clearInterval(previewTimer);
+  previewTimer = setInterval(() => {
+    if (!video.hidden && video.readyState >= 2) filter.crop(video, canvas, performance.now());
+  }, 240);
+}
+
+function stopCamera() {
+  clearInterval(previewTimer);
+  closeCamera(video);
 }
 
 get('camera-button').addEventListener('click', async () => {
   busy = true;
   updateCamera();
   try {
-    if (video.hidden) await openCamera(video, 'user');
-    else closeCamera(video);
-    if (!active) closeCamera(video);
+    if (video.hidden) await startCamera();
+    else stopCamera();
     message(video.hidden ? 'Webcam staat uit.' : 'Hou je hele hand in het beeld en klik op Maak foto.');
   } catch (error) {
     message(error.message);
@@ -100,11 +126,52 @@ get('capture').addEventListener('click', async () => {
   try {
     const split = get('split').value;
     const label = get('label').value;
-    const filename = await savePhoto(split, label);
-    message('Opgeslagen in trainingdata/' + split + '/' + label + ': ' + filename);
+    const result = await savePhoto(split, label);
+    message(result.filename ? 'Opgeslagen in trainingdata/' + split + '/' + label + ': ' + result.filename : result.guidance);
   } catch (error) {
     message(error.message || 'Opslaan is niet gelukt. Probeer opnieuw.');
   } finally {
+    busy = false;
+    updateCamera();
+  }
+});
+
+get('audit').addEventListener('click', async () => {
+  busy = true;
+  updateCamera();
+  let audit;
+  try {
+    message('Hand- en gezichtsfilter laden…');
+    audit = await createHandFilter();
+    const output = document.createElement('canvas');
+    output.width = output.height = 224;
+    const excluded = [];
+    const retained = Object.fromEntries(labels.map(label => [label, { total: 0, matches: 0 }]));
+    await readTrainingPhotos(({ label, file, position, count, image }) => {
+      message('Foto’s controleren · ' + label + ' ' + (position + 1) + '/' + count);
+      const result = audit.crop(image, output);
+      if (result.status !== 'hand') {
+        excluded.push({ label, file });
+        return;
+      }
+      const top = rankShapes(result.points).reduce((a, b) => a.probability > b.probability ? a : b);
+      retained[label].total++;
+      if (top.className === label) retained[label].matches++;
+    });
+    const response = await fetch('/api/training/review', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Handquest-Local': 'training' },
+      body: JSON.stringify(excluded),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error);
+    updateCounts(result.counts);
+    message(result.moved + ' foto’s verplaatst naar trainingdata/nakijken. Handvormcontrole op behouden trainingsfoto’s: ' +
+      labels.map(label => label + ' ' + retained[label].matches + '/' + retained[label].total).join(' · ') + '.');
+  } catch (error) {
+    message('Fotocontrole kon niet afronden. ' + error.message);
+  } finally {
+    audit?.close();
     busy = false;
     updateCamera();
   }
@@ -124,7 +191,7 @@ get('auto-start').addEventListener('click', async () => {
     updateCounts((await api('', undefined, signal)).counts);
     if (labels.some(label => counts.training[label] < TRAINING_MINIMUM)) {
       message('Webcam openen voor de automatische fotosessie…');
-      if (video.hidden) await openCamera(video, 'user');
+      if (video.hidden) await startCamera();
       signal.throwIfAborted();
       updateCamera();
       get('split').value = 'training';
@@ -136,26 +203,28 @@ get('auto-start').addEventListener('click', async () => {
           showExample();
           for (let seconds = 5; seconds > 0; seconds--) {
             message(label + ' · maak de afgebeelde handvorm. Opname over ' + seconds + ' s.');
-            if (label === 'Overig') message('Overig · toon een lege achtergrond, losse hand of ander gebaar. Opname over ' + seconds + ' s.');
+            if (label === 'Overig') message('Overig · toon een vuist, open hand of ander gebaar. Opname over ' + seconds + ' s.');
             await wait(1000, signal);
           }
-          for (let photo = 0; photo < batch; photo++) {
+          for (let photo = 0; photo < batch;) {
             signal.throwIfAborted();
             message(label + ' · foto ' + (photo + 1) + '/' + batch + '. Wissel lichtjes van hoek of afstand.');
-            await savePhoto('training', label, signal);
-            if (photo + 1 < batch) await wait(950, signal);
+            const result = await savePhoto('training', label, signal);
+            if (result.filename) photo++;
+            else message(label + ' · ' + result.guidance);
+            if (photo < batch) await wait(950, signal);
           }
         }
       }
     }
-    closeCamera(video);
+    stopCamera();
     updateCamera();
     const folder = await trainLocal(message, signal);
     message('Training klaar. Open het spel om je model te testen. Export: opruimquest/' + folder + '.');
   } catch (error) {
     message(signal.aborted ? 'Gestopt. Eerder opgeslagen foto’s blijven bewaard.' : error.message);
   } finally {
-    closeCamera(video);
+    stopCamera();
     automatic = undefined;
     busy = false;
     updateCamera();
@@ -163,7 +232,7 @@ get('auto-start').addEventListener('click', async () => {
 });
 get('auto-stop').addEventListener('click', () => {
   automatic?.abort();
-  closeCamera(video);
+  stopCamera();
   message('Stoppen…');
   updateCamera();
 });
@@ -171,7 +240,7 @@ get('auto-stop').addEventListener('click', () => {
 window.addEventListener('pagehide', () => {
   active = false;
   automatic?.abort();
-  closeCamera(video);
+  stopCamera();
   updateCamera();
 });
 window.addEventListener('pageshow', () => { active = true; });

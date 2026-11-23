@@ -4,7 +4,7 @@ import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { extname } from 'node:path';
 import { handleScore } from './score.mjs';
-import { handleDataset, handleTrainingPhoto } from './dataset.mjs';
+import { handleDataset, handlePhotoReview, handleTrainingPhoto } from './dataset.mjs';
 import { handleTraining, trainedAsset } from './trained-model.mjs';
 
 const origin = 'http://127.0.0.1:4174';
@@ -57,6 +57,10 @@ createServer(async (request, response) => {
       await (path.endsWith('/photo') ? handleTrainingPhoto : handleTraining)(request, response, origin);
       return;
     }
+    if (path === '/api/training/review') {
+      await handlePhotoReview(request, response, origin);
+      return;
+    }
     if (path === '/.netlify/functions/score') {
       const headers = { 'X-Quest-Device': request.headers['x-quest-device'] ?? '' };
       let body;
@@ -79,7 +83,7 @@ createServer(async (request, response) => {
       return;
     }
     const filename = path === '/' ? 'index.html' : path.slice(1);
-    const knownAsset = /^(index\.html|dataset\.html|evaluatie\.html|style\.css|app\.mjs|quest\.mjs|camera\.mjs|dataset\.mjs|evaluatie\.mjs|model\.mjs|trainer\.mjs|handalfabet\.png)$/.test(filename);
+    const knownAsset = /^(index\.html|dataset\.html|evaluatie\.html|style\.css|app\.mjs|quest\.mjs|camera\.mjs|dataset\.mjs|evaluatie\.mjs|model\.mjs|trainer\.mjs|hands\.mjs|handalfabet\.png)$/.test(filename);
     const modelAsset = /^model\/[a-z\d_-][a-z\d_.-]*\.(json|bin)$/i.test(filename);
     if (!knownAsset && !modelAsset) {
       response.writeHead(404).end();

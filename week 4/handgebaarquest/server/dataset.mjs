@@ -1,4 +1,4 @@
-import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, rename, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { labels } from '../public/quest.mjs';
 
@@ -35,6 +35,43 @@ export async function handleTrainingPhoto(request, response, origin) {
   const photo = await readFile(new URL(filename, trainingFolder(label)));
   const mime = filename.endsWith('.png') ? 'image/png' : filename.endsWith('.webp') ? 'image/webp' : 'image/jpeg';
   response.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'no-store' }).end(photo);
+}
+
+export async function handlePhotoReview(request, response, origin) {
+  if (request.method !== 'POST' || request.headers.origin !== origin ||
+      request.headers['x-handquest-local'] !== 'training' || request.headers['content-type'] !== 'application/json') {
+    json(response, 403, { error: 'De fotocontrole werkt uitsluitend op je pc.' });
+    return;
+  }
+  let body = '';
+  for await (const part of request) {
+    body += part;
+    if (body.length > 100_000) {
+      json(response, 413, { error: 'De fotocontrole is te groot.' });
+      return;
+    }
+  }
+  let photos;
+  try { photos = JSON.parse(body); }
+  catch { json(response, 400, { error: 'Ongeldige fotolijst.' }); return; }
+  if (!Array.isArray(photos) || !photos.every(photo => labels.includes(photo?.label) &&
+      typeof photo.file === 'string' && localFile.test(photo.file))) {
+    json(response, 400, { error: 'Ongeldige fotolijst.' });
+    return;
+  }
+  const archive = new URL('nakijken/handfilter-' + randomUUID() + '/', root);
+  let moved = 0;
+  for (const { label, file } of photos) {
+    const destination = new URL(label + '/', archive);
+    await mkdir(destination, { recursive: true });
+    try {
+      await rename(new URL(file, trainingFolder(label)), new URL(file, destination));
+      moved++;
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+  }
+  json(response, 200, { moved, counts: await countPhotos() });
 }
 
 function countFiles(folder) {

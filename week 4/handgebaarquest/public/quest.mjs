@@ -6,7 +6,7 @@ export const hints = {
   V: 'Spreid je gestrekte wijs- en middelvinger.',
   O: 'Maak met je vingers en duim een ronde O.',
   L: 'Wijs omhoog met je wijsvinger en steek je duim opzij.',
-  Overig: 'Gebruik een lege achtergrond of een handvorm die geen V, O of L is.',
+  Overig: 'Toon een vuist, open hand of andere handvorm dan V, O of L.',
 };
 
 export function targetFor(rounds) {

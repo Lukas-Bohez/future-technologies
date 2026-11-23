@@ -60,6 +60,10 @@ h1 { font-size: clamp(1.65rem, 7vw, 3.3rem); word-break: normal; }
 .counts { padding-left: 1.1rem; line-height: 1.6; }
 .capture-input { min-height: 2.75rem; padding: .4rem .5rem; font: inherit; }
 .gesture-example { width: 7rem; height: 7rem; background: #f5f7ff; border-radius: .65rem; padding: .3rem; }
+.private-camera { opacity: 0; pointer-events: none; }
+.viewfinder canvas { width: 100%; height: 100%; object-fit: contain; }
+.live-result { display: grid; grid-template-columns: 1fr auto; gap: .25rem 1rem; margin-top: .85rem; padding: .7rem .9rem; border: 1px solid var(--edge); border-radius: .75rem; background: var(--panel); }
+.live-result strong { color: var(--lime); }
 @media (min-width: 48rem) {
   main:has(.dataset) { width: min(100%, 60rem); }
   .dataset { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }

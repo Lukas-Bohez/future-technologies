@@ -10,6 +10,8 @@ Codex stelde **V**, **O** en **L** uit het Vlaamse handalfabet voor. Het bouwde 
 
 Ik vroeg vervolgens om automatische foto-opnames en training met een voorbeeld van ieder gebaar. Codex voegde een aftelling, voorbeelden uit het handalfabet en een automatische TensorFlow.js-export toe. Ik volg de getoonde handvormen zelf en verzamel de testbeelden apart.
 
+Toen ik meldde dat O en L slecht herkend werden, controleerde Codex de fotolabels en vond het 26 L-foto’s onder Overig. Codex zette die lokaal apart en voegde doorlopende herkenning en een hand- en gezichtsfilter toe.
+
 ## Mijn eigen werk
 
 Vul aan wanneer en hoe je de nieuwe foto’s maakte, hoe je het model trainde en wat je op je smartphone en tijdens de hertests vaststelde. Vermeld je eigen wijzigingen en eventuele vervolgprompts.

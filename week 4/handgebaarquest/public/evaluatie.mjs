@@ -1,5 +1,6 @@
 import { labels, THRESHOLD } from './quest.mjs';
 import { loadModel } from './model.mjs';
+import { createHandFilter } from './hands.mjs';
 
 const get = id => document.getElementById(id);
 const conditions = [
@@ -60,17 +61,29 @@ get('evaluate').addEventListener('click', async () => {
   get('images').disabled = true;
   get('report').hidden = true;
   get('status').textContent = 'Model laden…';
+  let filter;
   try {
     const model = await loadModel();
+    if (model.getMetadata()?.userMetadata?.preprocessing !== 'hand-crop-v1') {
+      throw new Error('Dit is de oude modelversie. Train opnieuw met de handfilter voordat je de resultaten gebruikt.');
+    }
+    filter = await createHandFilter();
+    const input = document.createElement('canvas');
+    input.width = input.height = 224;
     const results = [];
     for (const [index, item] of files.entries()) {
       get('status').textContent = 'Foto ' + (index + 1) + ' van ' + files.length + ' testen…';
       const image = await createImageBitmap(item.file);
       try {
-        const crop = Math.min(image.width, image.height);
+        const isolation = filter.crop(image, input);
         for (const condition of conditions) {
           ctx.filter = condition.filter;
-          ctx.drawImage(image, (image.width - crop) / 2, (image.height - crop) / 2, crop, crop, 0, 0, canvas.width, canvas.height);
+          if (isolation.status !== 'hand') {
+            results.push({ file: item.file.name, expected: item.label, condition: condition.name,
+              prediction: isolation.status === 'no-hand' ? 'Overig' : 'Beeld geweigerd', confidence: '' });
+            continue;
+          }
+          ctx.drawImage(input, 0, 0);
           const top = (await model.predict(canvas)).reduce((best, score) => score.probability > best.probability ? score : best);
           const prediction = labels.find(label => label.toLowerCase() === top.className.trim().toLowerCase());
           results.push({
@@ -90,6 +103,7 @@ get('evaluate').addEventListener('click', async () => {
   } catch (error) {
     get('status').textContent = error.message;
   } finally {
+    filter?.close();
     get('images').disabled = false;
     get('evaluate').disabled = false;
   }

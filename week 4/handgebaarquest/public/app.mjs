@@ -1,6 +1,7 @@
-import { captureSquare, closeCamera, openCamera } from './camera.mjs';
-import { hints, judge, targets, THRESHOLD } from './quest.mjs';
+import { closeCamera, openCamera } from './camera.mjs';
+import { hints, targets, THRESHOLD } from './quest.mjs';
 import { loadModel } from './model.mjs';
+import { createHandFilter, rankShapes } from './hands.mjs';
 
 const byId = id => document.getElementById(id);
 const loopback = ['127.0.0.1', 'localhost'].includes(location.hostname);
@@ -9,25 +10,30 @@ const video = byId('camera');
 const button = byId('action');
 const stop = byId('stop');
 const status = byId('status');
-const canvas = document.createElement('canvas');
-canvas.width = canvas.height = 224;
+const canvas = byId('hand-preview');
 const storageKey = preview ? 'handalfabet-simulatie' : 'handalfabet';
 let target;
 let pending;
 let device;
 let model;
+let handFilter;
 let busy = false;
 let pageActive = true;
+let watching = false;
+let timer;
+let lastVideoTime = -1;
+let frames = [];
+let enrollment = 0;
+let saveAfter = 0;
 
 function controls(message) {
   if (message) status.textContent = message;
   button.disabled = busy;
-  stop.disabled = busy;
-  stop.hidden = video.hidden;
+  stop.hidden = !watching;
+  canvas.hidden = video.hidden;
   byId('placeholder').hidden = !video.hidden;
-  byId('prediction').disabled = busy;
-  button.textContent = pending ? 'Punten opnieuw opslaan' : !target ? 'Opdracht ophalen' :
-    preview || !video.hidden ? 'Scan gebaar' : 'Start camera';
+  button.hidden = watching || preview;
+  button.textContent = !target ? 'Opdracht ophalen' : 'Start camera';
 }
 
 function initializeDevice() {
@@ -71,38 +77,85 @@ async function saveAttempt() {
   controls(saved ? feedback : 'De opdracht is intussen veranderd. Scan de letter die nu gevraagd wordt.');
 }
 
+function showRecognition(name, probability, mode) {
+  byId('recognized').textContent = name;
+  byId('confidence-label').textContent = mode;
+  byId('confidence').textContent = probability === undefined ? '–' : Math.round(probability * 100) + '%';
+}
+
 async function predict() {
-  if (preview) return [{ className: byId('prediction').value, probability: 0.97 }];
-  captureSquare(video, canvas);
+  if (preview) return { mode: 'Testzekerheid', predictions: [{ className: byId('prediction').value, probability: 0.97 }] };
+  if (video.readyState < 2 || video.currentTime === lastVideoTime) return;
+  lastVideoTime = video.currentTime;
+  const isolated = handFilter.crop(video, canvas, performance.now());
+  if (isolated.status !== 'hand') return { status: isolated.status };
+  if (model?.getMetadata()?.userMetadata?.preprocessing === 'hand-crop-v1') {
+    return { mode: 'Modelzekerheid', predictions: await model.predict(canvas) };
+  }
+  return { mode: 'Handvormscore', predictions: rankShapes(isolated.points) };
+}
+
+async function watch(session) {
+  if (!watching || session !== enrollment) return;
   try {
-    return await model.predict(canvas);
+    const result = await predict();
+    if (!watching || session !== enrollment) return;
+    if (result?.predictions) {
+      const best = result.predictions.reduce((a, b) => a.probability > b.probability ? a : b);
+      showRecognition(best.className, best.probability, result.mode);
+      const correct = best.className === target && best.probability >= THRESHOLD;
+      frames = correct ? [...frames.slice(-2), best.probability] : [];
+    } else if (result) {
+      frames = [];
+      const guidance = result.status === 'face' ? 'Hou je hand naast of onder je gezicht' :
+        result.status === 'clipped' ? 'Breng je hele hand dichterbij en in beeld' : 'Geen hand';
+      showRecognition(guidance, undefined, 'Zekerheid');
+    }
+    if (!pending && target && frames.length === 3) {
+      pending = { id: crypto.randomUUID(), target, confidence: Math.min(...frames) };
+      localStorage.setItem(storageKey + '-pending', JSON.stringify(pending));
+    }
+    if (pending && Date.now() >= saveAfter) {
+      saveAfter = Date.now() + 3000;
+      try {
+        await saveAttempt();
+        frames = [];
+        saveAfter = 0;
+      } catch {
+        controls('Puntenopslag tijdelijk niet bereikbaar. We proberen opnieuw.');
+      }
+    }
+  } catch (error) {
+    stopScanning(error.message);
   } finally {
-    canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+    if (watching && session === enrollment) timer = setTimeout(() => watch(session), 200);
   }
 }
 
-async function scan() {
-  controls('Hou je gebaar stil…');
-  const frames = [await predict()];
-  for (let index = 1; index < 3; index++) {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    frames.push(await predict());
-  }
-  const confidence = judge(frames, target);
-  if (confidence < THRESHOLD) {
-    controls('Geen punten. Maak ' + target + ' en hou je hele hand in het midden van het beeld.');
-    return;
-  }
-  pending = { id: crypto.randomUUID(), target, confidence };
-  localStorage.setItem(storageKey + '-pending', JSON.stringify(pending));
-  await saveAttempt();
+function startScanning() {
+  clearTimeout(timer);
+  watching = true;
+  frames = [];
+  lastVideoTime = -1;
+  controls(preview ? 'Kies een voorspelling. De teststand scant automatisch.' :
+    'Live herkenning actief. Hou je hand naast of onder je gezicht.');
+  watch(++enrollment);
+}
+
+function stopScanning(message) {
+  watching = false;
+  enrollment++;
+  clearTimeout(timer);
+  closeCamera(video);
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+  showRecognition('–', undefined, 'Zekerheid');
+  controls(message);
 }
 
 async function refresh() {
   if (!device) initializeDevice();
   await score();
-  controls(pending ? 'Je vorige ronde staat klaar om opnieuw op te slaan.' :
-    preview ? 'Kies de voorspelling en klik op Scan gebaar.' : 'Start je camera om te spelen.');
+  controls(preview ? 'Kies een voorspelling om de live herkenning te testen.' : 'Start je camera om te spelen.');
 }
 
 async function run(job) {
@@ -119,25 +172,30 @@ async function run(job) {
 }
 
 button.addEventListener('click', () => run(async () => {
-  if (pending) await saveAttempt();
-  else if (!target) await refresh();
-  else if (preview || !video.hidden) await scan();
-  else {
-    controls('Model laden en camera starten…');
-    model ??= await loadModel();
-    if (!pageActive) return;
-    await openCamera(video, 'user');
-    if (pageActive) controls('Hou je hele hand in het midden van het beeld.');
-    else closeCamera(video);
-  }
+  if (!target) await refresh();
+  controls('Handfilter en camera laden…');
+  [handFilter, model] = await Promise.all([
+    handFilter ?? createHandFilter('VIDEO'),
+    model ?? loadModel().catch(() => null),
+  ]);
+  if (!pageActive) return;
+  await openCamera(video, 'user');
+  if (pageActive) startScanning();
+  else closeCamera(video);
 }));
 stop.addEventListener('click', () => {
-  closeCamera(video);
-  controls('Camera staat uit.');
+  if (preview) {
+    stopScanning('Teststand staat stil. Verander de testvoorspelling om te hervatten.');
+    return;
+  }
+  stopScanning('Camera staat uit.');
+});
+byId('prediction').addEventListener('change', () => {
+  if (preview && target && !watching) startScanning();
 });
 window.addEventListener('pagehide', () => {
   pageActive = false;
-  closeCamera(video);
+  stopScanning();
 });
 window.addEventListener('pageshow', () => {
   pageActive = true;
@@ -151,5 +209,8 @@ if (location.protocol !== 'file:') {
     byId('other-mode').href = './';
     byId('other-mode').textContent = 'Met eigen model spelen';
   }
-  run(refresh);
+  run(async () => {
+    await refresh();
+    if (preview) startScanning();
+  });
 }

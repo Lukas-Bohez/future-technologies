@@ -1,7 +1,26 @@
 import { labels, TRAINING_MINIMUM } from './quest.mjs';
 import { loadLibraries } from './model.mjs';
+import { createHandFilter } from './hands.mjs';
 
 const localHeaders = { 'X-Handquest-Local': 'training' };
+
+export async function readTrainingPhotos(visit, signal) {
+  const manifest = await fetch('/api/training', { headers: localHeaders, signal }).then(checked).then(response => response.json());
+  for (const [index, label] of labels.entries()) {
+    const files = manifest.files[label];
+    for (const [position, file] of files.entries()) {
+      signal?.throwIfAborted();
+      const url = '/api/training/photo?' + new URLSearchParams({ label, file });
+      const photo = await fetch(url, { headers: localHeaders, signal }).then(checked).then(response => response.blob());
+      const image = await createImageBitmap(photo);
+      try {
+        if (await visit({ label, index, file, position, count: files.length, image }) === false) break;
+      } finally {
+        image.close();
+      }
+    }
+  }
+}
 
 async function checked(response) {
   if (!response.ok) throw new Error((await response.json().catch(() => null))?.error ?? 'De lokale trainingsserver reageert niet.');
@@ -19,37 +38,28 @@ function asBase64(data) {
 
 export async function trainLocal(report, signal) {
   report('Mobiel startmodel en trainingslijst laden…');
-  const [tm, manifest] = await Promise.all([
-    loadLibraries(),
-    fetch('/api/training', { headers: localHeaders, signal }).then(checked).then(response => response.json()),
-  ]);
+  const [tm, filter] = await Promise.all([loadLibraries(), createHandFilter()]);
   signal.throwIfAborted();
   const model = await tm.createTeachable({ modelName: 'Handgebaarquest', labels });
   model.setLabels(labels);
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = 224;
-  const ctx = canvas.getContext('2d');
-  for (const [index, label] of labels.entries()) {
-    const all = manifest.files[label];
-    if (all.length < TRAINING_MINIMUM) throw new Error('Te weinig trainingsfoto’s voor ' + label + '.');
-    const files = Array.from({ length: TRAINING_MINIMUM }, (_, sample) =>
-      all[Math.floor(sample * (all.length - 1) / (TRAINING_MINIMUM - 1))]);
-    for (const [position, file] of files.entries()) {
-      signal.throwIfAborted();
-      report('Foto’s lezen · ' + label + ' ' + (position + 1) + '/' + TRAINING_MINIMUM);
-      const url = '/api/training/photo?' + new URLSearchParams({ label, file });
-      const photo = await fetch(url, { headers: localHeaders, signal }).then(checked).then(response => response.blob());
-      const image = await createImageBitmap(photo);
-      try {
-        const crop = Math.min(image.width, image.height);
-        ctx.drawImage(image, (image.width - crop) / 2, (image.height - crop) / 2, crop, crop, 0, 0, 224, 224);
+  const accepted = Object.fromEntries(labels.map(label => [label, 0]));
+  try {
+    await readTrainingPhotos(async ({ label, index, position, count, image }) => {
+      report('Handfilter · ' + label + ' ' + (position + 1) + '/' + count);
+      if (filter.crop(image, canvas).status === 'hand') {
         await model.addExample(index, canvas);
-      } finally {
-        image.close();
-        ctx.clearRect(0, 0, 224, 224);
+        accepted[label]++;
+        if (accepted[label] >= TRAINING_MINIMUM) return false;
       }
-    }
+    }, signal);
+  } finally {
+    filter.close();
   }
+  const missing = labels.filter(label => accepted[label] < TRAINING_MINIMUM);
+  if (missing.length) throw new Error('Te weinig foto’s met vrije hand en zonder gezicht: ' +
+    missing.map(label => label + ' ' + accepted[label] + '/' + TRAINING_MINIMUM).join(', ') + '. Maak extra foto’s.');
   signal.throwIfAborted();
   const epochs = 35;
   report('Model trainen…');
@@ -73,7 +83,7 @@ export async function trainLocal(report, signal) {
             topology: artifacts.modelTopology,
             specs: artifacts.weightSpecs,
             weights: asBase64(artifacts.weightData),
-            metadata: model.getMetadata(),
+            metadata: { ...model.getMetadata(), userMetadata: { preprocessing: 'hand-crop-v1' } },
           }),
         }));
         ({ folder } = await response.json());
