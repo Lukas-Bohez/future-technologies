@@ -1,13 +1,13 @@
 # AI-verantwoording – Handgebaarquest
 
-Ik gebruikte OpenAI Codex. Ik gaf Codex de opdracht voor Campus Quest en vroeg om een app te maken die ik op mijn pc en smartphone kon testen. Mijn eerste idee was een opruimspel. Na het proberen op mijn laptop gaf ik aan dat ik geen trainingsfoto’s kon maken en dat de bediening te sterk op een smartphone gericht was.
+Ik gebruikte OpenAI Codex. Ik plakte de Campus Quest-opdracht en vroeg om een app die ik op mijn laptop en smartphone kon testen. Nadat ik oefeningen met Peace en Middelvinger had geprobeerd, gaf ik door dat mijn docent gebarentaal aanraadde. Ik vroeg om de testdata uit te breiden en meldde dat ik enkele beelden verkeerd had gelabeld.
 
-Mijn vervolgprompt was:
+Een vervolgprompt was:
 
-> ik dacht meer aan handgesturen herkennen zoals middelvinger, peace sign en zovoort, dat is leuker
+> ooops, ik heb een paar middelvinger in peace gezet, filtreer effe zodat de handgebaarherkenning goed verloopt
 
-Codex bouwde de webapp, de fotostand voor de laptop, de lokale server en de puntenopslag. De klasse **Geen gebaar**, de drempel van 90% en drie opeenvolgende beelden zijn voorstellen van Codex. Codex controleerde dat een gesimuleerd verkeerd gebaar geen punten gaf en dat 10 testpunten na herladen zichtbaar bleven.
+Codex stelde **V**, **O** en **L** uit het Vlaamse handalfabet voor. Het bouwde de spelmodus, fotostand en lokale evaluatiepagina. Codex bekeek de teruggevonden eigen foto’s, hield de originele reeks lokaal apart en selecteerde vier handuitsneden als **Overig**. De illustratie voor de handvormen komt van het Vlaams GebarentaalCentrum. De drempel van 90% en drie opeenvolgende beelden zijn keuzes van Codex.
 
 ## Mijn eigen werk
 
-Vul vóór het indienen in hoe je zelf de foto’s hebt genomen, het model hebt getraind en getest. Beschrijf wat je op basis van de tests hebt aangepast. Voeg eventuele vervolgprompts toe.
+Vul aan wanneer en hoe je de nieuwe foto’s maakte, hoe je het model trainde en wat je op je smartphone en tijdens de hertests vaststelde. Vermeld je eigen wijzigingen en eventuele vervolgprompts.

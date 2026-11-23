@@ -1,5 +1,6 @@
 import { captureSquare, closeCamera, openCamera } from './camera.mjs';
-import { judge, labels, THRESHOLD } from './quest.mjs';
+import { hints, judge, targets, THRESHOLD } from './quest.mjs';
+import { loadModel } from './model.mjs';
 
 const byId = id => document.getElementById(id);
 const loopback = ['127.0.0.1', 'localhost'].includes(location.hostname);
@@ -10,7 +11,7 @@ const stop = byId('stop');
 const status = byId('status');
 const canvas = document.createElement('canvas');
 canvas.width = canvas.height = 224;
-const storageKey = preview ? 'handgebaarquest-simulatie' : 'handgebaarquest';
+const storageKey = preview ? 'handalfabet-simulatie' : 'handalfabet';
 let target;
 let pending;
 let device;
@@ -29,39 +30,6 @@ function controls(message) {
     preview || !video.hidden ? 'Scan gebaar' : 'Start camera';
 }
 
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = src;
-    script.onload = resolve;
-    script.onerror = () => {
-      script.remove();
-      reject(new Error('De modelbibliotheek kon niet laden. Controleer je internet.'));
-    };
-    document.head.append(script);
-  });
-}
-
-async function loadModel() {
-  const resources = await Promise.all(['model.json', 'metadata.json'].map(name =>
-    fetch('./model/' + name, { method: 'HEAD', cache: 'no-store' })));
-  if (resources.some(result => !result.ok)) {
-    throw new Error('Je model ontbreekt. Train eerst de drie klassen en plaats de TensorFlow.js-export in public/model.');
-  }
-  if (!globalThis.tf) await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js');
-  if (!globalThis.tmImage) await loadScript('https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.3/dist/teachablemachine-image.min.js');
-  try {
-    const candidate = await globalThis.tmImage.load('./model/model.json', './model/metadata.json');
-    const available = candidate.getClassLabels().map(label => label.trim().toLowerCase());
-    if (available.length !== labels.length || !labels.every(label => available.includes(label.toLowerCase()))) {
-      throw new Error('Andere labels');
-    }
-    return candidate;
-  } catch {
-    throw new Error('Controleer of de modelbestanden compleet zijn en Peace, Middelvinger en Geen gebaar als labels gebruiken.');
-  }
-}
-
 function initializeDevice() {
   device = localStorage.getItem(storageKey) ?? crypto.randomUUID();
   localStorage.setItem(storageKey, device);
@@ -78,19 +46,29 @@ async function score(attempt) {
   });
   if (!result.ok && result.status !== 409) throw new Error('De puntenserver reageert niet. Probeer opnieuw.');
   const data = await result.json();
-  if (!Number.isSafeInteger(data.points) || !labels.includes(data.target)) throw new Error('Kan je score niet ophalen.');
+  if (!Number.isSafeInteger(data.points) || !targets.includes(data.target)) throw new Error('Kan je score niet ophalen.');
   byId('points').textContent = data.points;
   target = data.target;
   byId('target').textContent = target;
+  byId('hint').textContent = hints[target];
+  const progress = (data.points / 10) % targets.length;
+  byId('word').replaceChildren(...targets.map((letter, index) => {
+    const span = document.createElement('span');
+    span.textContent = letter;
+    if (index < progress) span.dataset.completed = '';
+    return span;
+  }));
   return result.ok;
 }
 
 async function saveAttempt() {
+  const letter = pending.target;
   const saved = await score(pending);
   localStorage.removeItem(storageKey + '-pending');
   pending = null;
-  controls(saved ? 'Gelukt! +10 punten. Je volgende gebaar staat hierboven.' :
-    'De opdracht is intussen veranderd. Scan het gebaar dat nu gevraagd wordt.');
+  const feedback = letter === targets.at(-1) ? 'VOL gespeld! +10 punten voor de laatste letter.' :
+    'Letter ' + letter + ' herkend. +10 punten.';
+  controls(saved ? feedback : 'De opdracht is intussen veranderd. Scan de letter die nu gevraagd wordt.');
 }
 
 async function predict() {

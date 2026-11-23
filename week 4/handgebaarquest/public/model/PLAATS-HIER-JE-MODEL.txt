@@ -1,3 +1,3 @@
 Pak je TensorFlow.js-export hier uit.
-Gebruik exact drie klassen: Peace, Middelvinger en Geen gebaar.
+Gebruik exact vier klassen: V, O, L en Overig.
 Plaats model.json, metadata.json en alle bijbehorende .bin-gewichten in deze map.

@@ -45,6 +45,14 @@ h1 { font-size: clamp(1.65rem, 7vw, 3.3rem); word-break: normal; }
 .challenge { display: flex; align-items: center; flex-wrap: wrap; gap: .35rem .85rem; padding: .8rem; margin: 0 0 .8rem; border: 1px solid var(--edge); border-radius: .75rem; background: var(--panel); }
 .challenge span { color: var(--muted); }
 .challenge strong { font-size: 1.35rem; color: var(--lime); }
+.challenge #hint { flex-basis: 100%; }
+.word { display: flex; gap: .4rem; flex-basis: 100%; }
+.word span { display: grid; place-items: center; width: 2rem; height: 2rem; border: 1px solid var(--edge); border-radius: .35rem; font-weight: 750; }
+.word [data-completed] { background: var(--lime); color: #18220a; }
+.reference { display: block; width: 100%; margin-top: .75rem; border-radius: .4rem; }
+.evidence { width: 100%; border-collapse: collapse; margin-block: 1rem; }
+.evidence th, .evidence td { border-bottom: 1px solid var(--edge); padding: .35rem; text-align: right; }
+.evidence th:first-child { text-align: left; }
 .viewfinder { width: min(100%, 26rem); margin: .85rem auto 0; aspect-ratio: 1; }
 .capture-grid { display: grid; gap: .6rem; margin-top: .7rem; }
 .capture-grid small { color: var(--muted); }

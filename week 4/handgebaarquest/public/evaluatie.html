@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Model evalueren · Handgebaarquest</title>
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./evaluatie.mjs"></script>
+</head>
+<body>
+  <main>
+    <p class="brand">Handgebaarquest</p>
+    <h1>Model evalueren</h1>
+    <nav class="local-nav" aria-label="Handgebaarquest"><a href="./">Spel</a><a href="./dataset.html">Trainings- en testfoto’s</a></nav>
+    <p class="intro">Kies de map <strong>dataset/test</strong>. De app test je model op de originele beelden en toont donkerder en lichter gemaakte versies als aparte stresstest. De foto’s blijven op je toestel.</p>
+    <label for="images">Afzonderlijke testmap</label>
+    <input id="images" class="capture-input" type="file" webkitdirectory multiple>
+    <p id="status" class="status" role="status">Kies de testmap nadat je het model hebt geëxporteerd.</p>
+    <button id="evaluate" type="button" disabled>Test model</button>
+    <button id="report" class="secondary" type="button" hidden>Download resultaten als CSV</button>
+    <div id="results"></div>
+  </main>
+</body>
+</html>

@@ -4,6 +4,7 @@ import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { extname } from 'node:path';
 import { handleScore } from './score.mjs';
+import { handleDataset } from './dataset.mjs';
 
 const origin = 'http://127.0.0.1:4174';
 const publicDir = new URL('../public/', import.meta.url);
@@ -14,6 +15,7 @@ const contentTypes = {
   '.mjs': 'text/javascript; charset=utf-8',
   '.json': 'application/json',
   '.bin': 'application/octet-stream',
+  '.png': 'image/png',
 };
 
 function readRecord(key) {
@@ -46,6 +48,10 @@ createServer(async (request, response) => {
   response.setHeader('Permissions-Policy', 'camera=(self), microphone=()');
   try {
     const path = new URL(request.url, origin).pathname;
+    if (path === '/api/dataset') {
+      await handleDataset(request, response, origin);
+      return;
+    }
     if (path === '/.netlify/functions/score') {
       const headers = { 'X-Quest-Device': request.headers['x-quest-device'] ?? '' };
       let body;
@@ -68,7 +74,7 @@ createServer(async (request, response) => {
       return;
     }
     const filename = path === '/' ? 'index.html' : path.slice(1);
-    const knownAsset = /^(index\.html|dataset\.html|style\.css|app\.mjs|quest\.mjs|camera\.mjs|dataset\.mjs)$/.test(filename);
+    const knownAsset = /^(index\.html|dataset\.html|evaluatie\.html|style\.css|app\.mjs|quest\.mjs|camera\.mjs|dataset\.mjs|evaluatie\.mjs|model\.mjs|handalfabet\.png)$/.test(filename);
     const modelAsset = /^model\/[a-z\d_-][a-z\d_.-]*\.(json|bin)$/i.test(filename);
     if (!knownAsset && !modelAsset) {
       response.writeHead(404).end();

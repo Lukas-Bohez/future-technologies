@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Trainingsfoto’s · Handgebaarquest</title>
+  <title>Trainings- en testfoto’s · Handgebaarquest</title>
   <link rel="stylesheet" href="./style.css">
   <script type="module" src="./dataset.mjs"></script>
 </head>
 <body>
   <main>
     <p class="brand">Handgebaarquest</p>
-    <h1>Trainingsfoto’s maken</h1>
-    <nav class="local-nav" aria-label="Handgebaarquest"><a href="./">Terug naar het spel</a></nav>
-    <p class="intro">Kies een eigen opslagmap, zet je webcam aan en fotografeer je hele hand. Hou je gezicht en herkenbare spullen buiten beeld.</p>
+    <h1>Trainings- en testfoto’s maken</h1>
+    <nav class="local-nav" aria-label="Handgebaarquest"><a href="./">Terug naar het spel</a><a href="./evaluatie.html">Model evalueren</a></nav>
+    <p class="intro">Fotografeer je hele hand met de webcam. Elke bevestigde foto staat meteen in de map <strong>dataset</strong> van dit project.</p>
     <div class="dataset">
       <div>
         <div class="viewfinder">
@@ -22,21 +22,31 @@
         <img id="recent" class="preview-photo" alt="Laatst gemaakte foto" hidden>
       </div>
       <div class="capture-grid">
-        <button id="folder" class="secondary" type="button">Kies opslagmap</button>
-        <small id="storage">Zonder gekozen map downloadt je browser elke foto apart.</small>
+        <label for="split">Waarvoor is de foto?</label>
+        <select id="split" class="capture-input">
+          <option value="training">Training · 30 per klasse</option>
+          <option value="test">Aparte test · 10 per klasse</option>
+        </select>
         <label for="label">Welke klasse fotografeer je?</label>
         <select id="label" class="capture-input">
-          <option value="0">Peace</option>
-          <option value="1">Middelvinger</option>
-          <option value="2">Geen gebaar</option>
+          <option>V</option>
+          <option>O</option>
+          <option>L</option>
+          <option>Overig</option>
         </select>
-        <button id="camera-button" class="secondary" type="button">Start webcam</button>
+        <small id="hint"></small>
+        <button id="camera-button" class="secondary" type="button" disabled>Start webcam</button>
         <button id="capture" type="button" disabled>Maak foto</button>
         <div id="status" role="status">Kies een klasse en start je webcam.</div>
         <ul id="counts" class="counts" aria-label="Aantal foto’s per klasse"></ul>
       </div>
     </div>
-    <p class="notice">Maak per klasse minstens 30 trainingsfoto’s. Wissel licht, afstand, hoek en achtergrond af voor alle drie de klassen. Gebruik voor <strong>Geen gebaar</strong> ook een lege achtergrond, een losse hand of een open hand.</p>
+    <p class="notice">Houd je gezicht buiten beeld. Maak testfoto’s in een aparte sessie, bijvoorbeeld met ander licht of een andere achtergrond. Gebruik de map <strong>test</strong> alleen om je model te evalueren.</p>
+    <details>
+      <summary>Bekijk het Vlaamse handalfabet</summary>
+      <img class="reference" src="./handalfabet.png" alt="Overzicht van het volledige Vlaamse handalfabet met tekeningen van de handvormen">
+      <p class="privacy">Bron afbeelding: <a href="https://vgtc.be/vlaamse-gebarentaal/dwnlds/">Vlaams GebarentaalCentrum · Vlaams handalfabet</a>.</p>
+    </details>
   </main>
 </body>
 </html>

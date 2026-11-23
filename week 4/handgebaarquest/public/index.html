@@ -14,23 +14,27 @@
       <div><p class="brand">Campus Quest</p><h1>Handgebaarquest</h1></div>
       <div class="score" aria-label="Punten"><strong id="points">–</strong><span>punten</span></div>
     </header>
-    <p class="intro">Doe het gevraagde gebaar in beeld. Hou het stil tijdens de scan en verdien 10 punten.</p>
+    <p class="intro">Spel <strong>VOL</strong> met drie letters uit het Vlaamse handalfabet. Hou elke handvorm stil tijdens de scan.</p>
     <p id="file-help" class="notice" hidden>Dubbelklik op <strong>Start lokaal.cmd</strong> in de projectmap en open daarna de <a href="http://127.0.0.1:4174/">lokale app</a>.</p>
     <nav id="local-nav" class="local-nav" hidden aria-label="Lokale hulpmiddelen">
-      <a href="./dataset.html">Trainingsfoto’s maken</a>
+      <a href="./dataset.html">Trainings- en testfoto’s maken</a>
+      <a href="./evaluatie.html">Model evalueren</a>
       <a id="other-mode" href="?preview=1">Teststand openen</a>
     </nav>
     <section class="challenge" aria-label="Huidige opdracht">
-      <span>Maak dit gebaar</span>
+      <span>Volgende letter</span>
       <strong id="target">…</strong>
+      <span id="hint"></span>
+      <span id="word" class="word" aria-label="Woordvoortgang"></span>
     </section>
     <section id="preview" class="notice" hidden>
       <p><strong>Teststand.</strong> Voorspellingen zijn hier gesimuleerd. Je punten blijven apart.</p>
       <label for="prediction">Gesimuleerde voorspelling</label>
       <select id="prediction">
-        <option>Peace</option>
-        <option>Middelvinger</option>
-        <option>Geen gebaar</option>
+        <option>V</option>
+        <option>O</option>
+        <option>L</option>
+        <option>Overig</option>
       </select>
     </section>
     <div id="viewfinder" class="viewfinder">
@@ -41,6 +45,7 @@
     <button id="action" type="button" disabled>Start camera</button>
     <button id="stop" class="secondary" type="button" hidden>Camera uitzetten</button>
     <p class="privacy">De browser verwerkt je camerabeelden op het toestel. De server ontvangt de scorepoging en bewaart de geslaagde rondes onder een willekeurige code.</p>
+    <p class="privacy"><a href="https://vgtc.be/vlaamse-gebarentaal/dwnlds/">Vlaams handalfabet · Vlaams GebarentaalCentrum</a></p>
   </main>
   <script>if (location.protocol === 'file:') document.getElementById('file-help').hidden = false;</script>
 </body>

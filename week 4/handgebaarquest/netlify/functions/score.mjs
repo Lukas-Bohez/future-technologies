@@ -3,7 +3,7 @@ import { handleScore } from '../../server/score.mjs';
 
 export default async function score(request) {
   try {
-    return await handleScore(request, getStore({ name: 'handgebaarquest-scores', consistency: 'strong' }));
+    return await handleScore(request, getStore({ name: 'handgebaarquest-handalfabet', consistency: 'strong' }));
   } catch (error) {
     console.error('Scoreopslag mislukt', error.name);
     return Response.json({ error: 'Puntenopslag tijdelijk niet beschikbaar.' }, {

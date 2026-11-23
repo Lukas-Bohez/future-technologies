@@ -1,32 +1,26 @@
-# Handgebaarquest
+# Handgebaarquest · Vlaams handalfabet
 
-Campus Quest · track D, handgebaren · Lukas Bohez
+Campus Quest · track D · Lukas Bohez
 
-Het spel vraagt afwisselend **Peace** en **Middelvinger**. Een succesvolle scan levert 10 punten op. De gevraagde klasse moet in drie beelden na elkaar minstens 90% halen. **Geen gebaar** is een trainingsklasse voor beelden die geen punten moeten opleveren. Bespreek het gekozen idee kort met je docent, zoals gevraagd bij track D.
+Spel **VOL** met drie letters uit het Vlaamse handalfabet. Elke herkende letter geeft 10 punten. Dezelfde letter moet op drie opeenvolgende camerabeelden minstens 90% halen. **Overig** is de klasse voor andere handvormen en lege beelden. Het Vlaamse handalfabet wordt naast Vlaamse Gebarentaal gebruikt, bijvoorbeeld voor namen en afkortingen. Dit fotomodel oefent drie handvormen. Een gebarentaalmodel voor woorden en zinnen heeft ook informatie nodig over onder meer beweging, plaats en gezichtsuitdrukking. [Vlaams GebarentaalCentrum](https://vgtc.be/vlaamse-gebarentaal/dwnlds/) · [Woordenboek VGT](https://www.vlaamsegebarentaal.be/faq)
 
-## Foto’s maken op je laptop
+## Foto’s maken en het model trainen
 
-1. Dubbelklik op `Start lokaal.cmd` of voer `npm start` uit met Node.js 22.13 of hoger. Laat het venster open. Open de [fotostand](http://127.0.0.1:4174/dataset.html) in Chrome of Edge.
-2. Klik op **Kies opslagmap**. Kies of maak een lege map met de naam `dataset`, buiten de map `public`. De fotostand maakt drie submappen en sorteert de beelden. Als je browser geen mapkiezer ondersteunt, downloadt hij de foto’s apart met de klas in de bestandsnaam.
-3. Selecteer **Peace**, **Middelvinger** of **Geen gebaar**. Klik op **Start webcam**, sta de camera toe en kies **Maak foto**. Houd je hele hand in het midden en je gezicht buiten beeld.
-4. Maak per klasse minstens 30 trainingsfoto’s. Verdeel ze bijvoorbeeld over drie sessies van 10 en fotografeer in iedere sessie alle klassen. Wijzig afstand, kijkhoek, hand, licht en achtergrond. Neem voor **Geen gebaar** lege beelden, een rustende hand en andere handvormen op. Trek je horloge voor een reeks foto’s uit en draag het voor een andere reeks, even vaak per klasse.
-5. Bewaar minstens vijf extra foto’s per klasse apart voor de test. Gebruik een andere sessie of een andere achtergrond. Voeg ze pas aan de trainingsset toe als je na een test bewust wilt hertrainen en je nog een nieuwe, onafhankelijke testset achterhoudt.
+1. Open de [lokale fotostand](http://127.0.0.1:4174/dataset.html). Staat de server uit? Dubbelklik op **Start lokaal.cmd** of gebruik npm start met Node.js 22.13 of hoger.
+2. Kies **Training** of **Aparte test**. Kies daarna **V**, **O**, **L** of **Overig** en start je webcam. Elke bevestigde foto staat meteen in dataset/training of dataset/test onder de juiste klasse. Open bij twijfel het Vlaamse handalfabet onderaan de fotostand.
+3. Verzamel minstens 30 trainingsfoto’s per klasse, met wisselend licht, afstand, hoek en achtergrond. Houd gezicht en omstanders buiten beeld. Neem de vier eerder gecontroleerde uitsneden alleen mee voor **Overig**. Maak ook nieuwe beelden van een lege achtergrond, een ontspannen hand en andere lettervormen.
+4. Neem ongeveer 10 afzonderlijke testfoto’s per klasse in een andere sessie. Gebruik waar mogelijk andere belichting, een andere hoek of een andere hand. Laat deze testmap buiten je training.
+5. Open [Teachable Machine](https://teachablemachine.withgoogle.com/train/image). Kies **Image Project → Standard image model**. Maak de klassen **V**, **O**, **L** en **Overig**, voeg per klasse de eigen trainingsfoto’s toe en klik op **Train Model**.
+6. Kies **Export Model → TensorFlow.js → Download my model**. Plaats model.json, metadata.json en alle .bin-gewichten in public/model. Open de [gewone app](http://127.0.0.1:4174/) en probeer het echte model. Voor het laden van de modelbibliotheken heeft de browser internet nodig.
 
-## Model trainen en testen
+## Evalueren en indienen
 
-1. Open [Teachable Machine](https://teachablemachine.withgoogle.com/train/image) op je pc. Kies **Image Project → Standard image model**.
-2. Maak de klassen **Peace**, **Middelvinger** en **Geen gebaar**. Voeg per klas de bijbehorende trainingsfoto’s toe en kies **Train Model**.
-3. Kies **Export Model → TensorFlow.js → Download my model**. Pak `model.json`, `metadata.json` en alle `.bin`-gewichten uit in `public/model/`.
-4. Open de [lokale app](http://127.0.0.1:4174/) en klik op **Start camera**. Test beide gebaren en beelden zonder gebaar. Voor het laden van de modelbibliotheken heeft de browser internet nodig.
-5. De [lokale teststand](http://127.0.0.1:4174/?preview=1) werkt zonder model of camera. Die simuleert voorspellingen en bewaart haar eigen testscore. Het ingevulde testverslag moet over het echte model gaan.
+- [Model evalueren](http://127.0.0.1:4174/evaluatie.html) verwerkt de aparte testmap lokaal. **Origineel** geeft het resultaat op echte testfoto’s. **Donkerder** en **Lichter** zijn afgeleide stresstests op diezelfde bronfoto’s. Tel ze niet mee als nieuwe onafhankelijke voorbeelden. Download indien gewenst de CSV. De fototest beoordeelt losse beelden. Test daarnaast ook live op drie opeenvolgende frames.
+- De [teststand](http://127.0.0.1:4174/?preview=1) gebruikt gesimuleerde voorspellingen. Ze laat zien of de spelregels en scoreopslag werken.
+- Zet de eigen modelbestanden pas na de tests op GitHub. Houd de map dataset en eventuele herkenbare opnames buiten de openbare repository. Vernieuw de voorlopige zip met de modelbestanden.
+- Importeer de repository in Netlify met **week 4/handgebaarquest** als **Base directory**. Test de HTTPS-link op je smartphone en controleer of de punten na herladen zichtbaar blijven. De video voor de docent toont iemand anders die de app op jouw smartphone gebruikt en duurt maximaal twee minuten.
+- Lever de GitHub-link, de vernieuwde zip, de live link, de demo, [Praktijktest.md](Praktijktest.md) en [AI-verantwoording.md](AI-verantwoording.md) in. Bespreek de scope van track D met je docent.
 
-## Live en inleveren
+De fotostand schrijft uitsluitend naar een map op je pc. Tijdens het spel verwerkt de browser de camerabeelden. De puntenfunctie ontvangt de toestelcode, de rondecode, de gevraagde letter en de zekerheid. Ze bewaart de rondecodes. Een herhaald verzoek telt eenmaal.
 
-1. Zet na de echte tests de eigen modelbestanden op GitHub. Houd de ruwe foto’s en demo buiten de openbare repository. Neem alleen je eigen hand op of vraag toestemming als iemand anders herkenbaar in beeld komt.
-2. Importeer de GitHub-repository in Netlify en kies `week 4/handgebaarquest` als **Base directory**. De website en puntenfunctie staan in `netlify.toml`. Netlify Blobs bewaart de punten. [Netlify-handleiding](https://docs.netlify.com/start/quickstarts/deploy-from-repository/)
-3. Open de live HTTPS-link op je smartphone, toets de camera en herlaad om te zien of de punten blijven staan. Film daarna iemand anders die op jouw smartphone speelt. Je kunt de telefoon waarop het spel draait tijdens de demo filmen met de webcam van je laptop.
-4. Lever de GitHub-link, een vernieuwde zip met de modelbestanden, de live link en je demo van maximaal twee minuten in. Voeg [Praktijktest.md](Praktijktest.md) en [AI-verantwoording.md](AI-verantwoording.md) toe zodra die ingevuld zijn.
-
-## Beelden en punten
-
-De fotostand bewaart beelden lokaal in de gekozen map of als download. De spelmodus verwerkt elk beeld in de browser. De puntenfunctie ontvangt een willekeurige toestel- en rondecode, het gevraagde gebaar en de zekerheid. Ze bewaart alleen de geslaagde rondecodes per toestel. Opnieuw verzenden van dezelfde ronde geeft geen extra punten.
+Afbeelding van het Vlaamse handalfabet door het [Vlaams GebarentaalCentrum](https://vgtc.be/vlaamse-gebarentaal/dwnlds/).
