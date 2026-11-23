@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Trainingsfoto’s · Handgebaarquest</title>
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./dataset.mjs"></script>
+</head>
+<body>
+  <main>
+    <p class="brand">Handgebaarquest</p>
+    <h1>Trainingsfoto’s maken</h1>
+    <nav class="local-nav" aria-label="Handgebaarquest"><a href="./">Terug naar het spel</a></nav>
+    <p class="intro">Kies een eigen opslagmap, zet je webcam aan en fotografeer je hele hand. Hou je gezicht en herkenbare spullen buiten beeld.</p>
+    <div class="dataset">
+      <div>
+        <div class="viewfinder">
+          <video id="camera" playsinline muted autoplay hidden></video>
+          <p id="placeholder">Webcam staat uit</p>
+        </div>
+        <img id="recent" class="preview-photo" alt="Laatst gemaakte foto" hidden>
+      </div>
+      <div class="capture-grid">
+        <button id="folder" class="secondary" type="button">Kies opslagmap</button>
+        <small id="storage">Zonder gekozen map downloadt je browser elke foto apart.</small>
+        <label for="label">Welke klasse fotografeer je?</label>
+        <select id="label" class="capture-input">
+          <option value="0">Peace</option>
+          <option value="1">Middelvinger</option>
+          <option value="2">Geen gebaar</option>
+        </select>
+        <button id="camera-button" class="secondary" type="button">Start webcam</button>
+        <button id="capture" type="button" disabled>Maak foto</button>
+        <div id="status" role="status">Kies een klasse en start je webcam.</div>
+        <ul id="counts" class="counts" aria-label="Aantal foto’s per klasse"></ul>
+      </div>
+    </div>
+    <p class="notice">Maak per klasse minstens 30 trainingsfoto’s. Wissel licht, afstand, hoek en achtergrond af voor alle drie de klassen. Gebruik voor <strong>Geen gebaar</strong> ook een lege achtergrond, een losse hand of een open hand.</p>
+  </main>
+</body>
+</html>
