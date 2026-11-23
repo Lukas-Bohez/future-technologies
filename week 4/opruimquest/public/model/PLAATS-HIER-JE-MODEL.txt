@@ -1,0 +1,3 @@
+Pak je TensorFlow.js-export van Teachable Machine hier uit.
+In deze map horen model.json, metadata.json en het bijbehorende .bin-bestand.
+Gebruik in Teachable Machine de labels Rommelig en Netjes.

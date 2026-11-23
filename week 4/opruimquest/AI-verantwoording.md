@@ -1,0 +1,17 @@
+# AI-verantwoording – Opruimquest
+
+## Tool en prompt
+
+Ik gebruikte OpenAI Codex. Ik plakte de lescontext en de volledige opdracht voor Campus Quest, inclusief de tracks, minimumvereisten, beoordelingscriteria en inleverstukken. Daarna schreef ik:
+
+> Dus, de opdracht heb ik je gegeven, nu moet je hem zo goed mogelijk maken, enorm bedankt dat je me hierbij wilt helpen
+
+Deze verantwoording gaat over deel 2, het eigen AI-checkpoint.
+
+## Wat leverde Codex op?
+
+Codex koos track C en maakte de webpagina met lokale beeldherkenning, een vóór- en nascan en een koppeling met Netlify voor de punten. Codex koos een drempel van 90%, drie opeenvolgende beelden per scan en minimaal drie seconden tussen twee scans. Het leverde ook de eerste README en een invulblad voor praktijktests. De modelmap bevat bij deze oplevering alleen een instructiebestand.
+
+## Wat deed of wijzigde ik zelf?
+
+Vul vóór het indienen aan welke foto’s je hebt gemaakt, hoe je het model hebt getraind, met wie en op welk toestel je het hebt getest, en welke inhoud, interface of instellingen je zelf hebt aangepast. Voeg eventuele vervolgprompts toe als je die gebruikt.
