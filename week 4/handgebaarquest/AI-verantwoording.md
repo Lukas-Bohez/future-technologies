@@ -1,17 +1,15 @@
 # AI-verantwoording – Handgebaarquest
 
-Ik gebruikte OpenAI Codex. Ik plakte de Campus Quest-opdracht en vroeg om een app die ik op mijn laptop en smartphone kon testen. Nadat ik oefeningen met Peace en Middelvinger had geprobeerd, gaf ik door dat mijn docent gebarentaal aanraadde. Ik vroeg om de testdata uit te breiden en meldde dat ik enkele beelden verkeerd had gelabeld.
+Ik gebruikte OpenAI Codex. Ik gaf Codex de opdracht voor Campus Quest. Daarna vroeg ik om een app die ik op mijn pc en smartphone kon proberen. Eerst wilde ik losse handgebaren herkennen. Na de tip van mijn docent over gebarentaal stelde Codex een oefening met V, O en L uit het Vlaamse handalfabet voor.
 
-Een vervolgprompt was:
+Mijn vervolgprompts gingen onder meer over de foto’s lokaal opslaan, automatisch trainen en een voorbeeld van ieder gebaar tonen. Ik meldde dat ik enkele middelvingerfoto’s als Peace had gelabeld, dat O en L slecht herkend werden en dat het camerabeeld zwart was. Ik vroeg ook om continu te scannen en onder het beeld te tonen wat de app herkende. Tot slot vroeg ik om de bestanden en indieningstekst klaar te zetten en mijn pc-demo verticaal bij te snijden.
 
-> ooops, ik heb een paar middelvinger in peace gezet, filtreer effe zodat de handgebaarherkenning goed verloopt
+Enkele letterlijke fragmenten uit mijn prompts:
 
-Codex stelde **V**, **O** en **L** uit het Vlaamse handalfabet voor. Het bouwde de spelmodus, fotostand en lokale evaluatiepagina. Codex bekeek de teruggevonden eigen foto’s, hield de originele reeks lokaal apart en selecteerde vier handuitsneden als **Overig**. De illustratie voor de handvormen komt van het Vlaams GebarentaalCentrum. De drempel van 90% en drie opeenvolgende beelden zijn keuzes van Codex.
+> geef wel een voorbeeld van het handgebaar dat ik moet maken lol, ik ken gebarentaal niet
 
-Ik vroeg vervolgens om automatische foto-opnames en training met een voorbeeld van ieder gebaar. Codex voegde een aftelling, voorbeelden uit het handalfabet en een automatische TensorFlow.js-export toe. Ik volg de getoonde handvormen zelf en verzamel de testbeelden apart.
+> heb gewoon vanonder wat dat het herkent en met hoeveel zekerheid, altijd scannen, geen scan gebaar knop
 
-Toen ik meldde dat O en L slecht herkend werden, controleerde Codex de fotolabels en vond het 26 L-foto’s onder Overig. Codex zette die lokaal apart en voegde doorlopende herkenning en een hand- en gezichtsfilter toe.
+> camera is gewoon zwart, dit werkt echt voor geen meter, fix dit aub
 
-## Mijn eigen werk
-
-Vul aan wanneer en hoe je de nieuwe foto’s maakte, hoe je het model trainde en wat je op je smartphone en tijdens de hertests vaststelde. Vermeld je eigen wijzigingen en eventuele vervolgprompts.
+Ik koos het onderwerp, maakte webcamfoto’s, volgde de voorbeelden in de fotostand, testte de app op mijn pc en nam de pc-demo op. Ik gaf concrete feedback over de labels, herkenning en webcam. Codex bouwde en verbeterde de app en puntenopslag, hielp foto’s controleren en herlabelen, voegde het handkader toe, trainde en exporteerde met mijn bewaarde beelden, en stelde het verslag op uit de vastgestelde problemen. De demo is bijgesneden uit mijn oorspronkelijke pc-opname. De illustraties van de handvormen komen van het Vlaams GebarentaalCentrum.

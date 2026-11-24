@@ -2,11 +2,15 @@
 
 Campus Quest · track D · Lukas Bohez
 
+[Open de live app](https://handgebaarquest.autumnape16.chatgpt.site)
+
 Spel **VOL** met drie letters uit het Vlaamse handalfabet. Zodra je de camera start, zie je de beste voorspelling continu onder het beeld. De gevraagde letter geeft 10 punten bij minstens 90% op drie opeenvolgende beelden. **Overig** omvat andere handvormen. Het Vlaamse handalfabet wordt naast Vlaamse Gebarentaal gebruikt, bijvoorbeeld voor namen en afkortingen. Dit fotomodel oefent drie handvormen. Een gebarentaalmodel voor woorden en zinnen heeft ook informatie nodig over onder meer beweging, plaats en gezichtsuitdrukking. [Vlaams GebarentaalCentrum](https://vgtc.be/vlaamse-gebarentaal/dwnlds/) · [Woordenboek VGT](https://www.vlaamsegebarentaal.be/faq)
 
 MediaPipe bakent de hand lokaal af. Het brede camerabeeld blijft zichtbaar, ook zonder gedetecteerde hand. Gedetecteerde gezichten worden daarin afgedekt. Het stippelkader helpt je je hand te plaatsen. Een groen kader betekent dat de app een bruikbare handuitsnede heeft. Voor de foto en voorspelling gebruikt de app alleen die uitsnede. Ze weigert de uitsnede als de handpunten een gedetecteerd gezicht overlappen. Zolang er nog geen model met diezelfde uitsneden is getraind, geeft de app een **handvormscore** op basis van de vingerposities. Zodra de nieuwe TensorFlow.js-export geladen is, geeft de app **modelzekerheid**. [MediaPipe Hand Landmarker](https://developers.google.com/edge/mediapipe/solutions/vision/hand_landmarker?tab=Web)
 
 ## Foto’s maken en het model trainen
+
+De meegeleverde TensorFlow.js-export is getraind met 30 eigen voorbeelden per klasse. Ik verzamelde de opnames met mijn laptopwebcam, zette onduidelijke beelden apart en corrigeerde fout gelabelde gebaren. Voor een deel van de oudere foto’s gebruikte ik gecontroleerde handuitsneden. De originele webcamfoto’s blijven lokaal.
 
 1. Open de [lokale trainingsstand](http://127.0.0.1:4174/dataset.html). Dubbelklik zo nodig op **Start lokaal.cmd** of gebruik npm start met Node.js 22.13 of hoger.
 2. Klik eerst op **Controleer foto’s en zet onbruikbare apart** als je nog volledige webcambeelden in je trainingsmap hebt. Daarna klik je op **Start automatische training** en geef je de webcam toegang. Hou de hele hand naast of onder je gezicht. De pagina toont per ronde de handvorm, telt vijf seconden af en neemt maximaal vijf geldige foto’s per keer. Voor **Overig** toon je een vuist, open hand of andere lettervorm. Zonder gedetecteerde hand maakt de app geen opname.
@@ -22,6 +26,7 @@ Je kunt ook handmatig trainen via [Teachable Machine](https://teachablemachine.w
 - De [teststand](http://127.0.0.1:4174/?preview=1) gebruikt gesimuleerde voorspellingen. Ze laat zien of de spelregels en scoreopslag werken.
 - Zet de eigen modelbestanden pas na de tests op GitHub. Houd de map dataset en eventuele herkenbare opnames buiten de openbare repository. Vernieuw de voorlopige zip met de modelbestanden.
 - Importeer de repository in Netlify met **week 4/handgebaarquest** als **Base directory**. Test de HTTPS-link op je smartphone en controleer of de punten na herladen zichtbaar blijven. De video voor de docent toont iemand anders die de app op jouw smartphone gebruikt en duurt maximaal twee minuten.
+- De Worker voor de openbare versie gebruikt D1 voor de scoreopslag. De servercode staat in `server/site-worker.mjs`, de build in `server/build-site.mjs` en het databaseschema in `drizzle/`.
 - Lever de GitHub-link, de vernieuwde zip, de live link, de demo, [Praktijktest.md](Praktijktest.md) en [AI-verantwoording.md](AI-verantwoording.md) in. Bespreek de scope van track D met je docent.
 
 De fotostand schrijft uitsluitend naar een map op je pc. Tijdens het spel verwerkt de browser de camerabeelden. De puntenfunctie ontvangt de toestelcode, de rondecode, de gevraagde letter en de zekerheid. Ze bewaart de rondecodes. Een herhaald verzoek telt eenmaal.

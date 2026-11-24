@@ -1,30 +1,21 @@
 # Praktijktest – Handgebaarquest
 
-## Eerste versie en datasetcontrole
+Lukas Bohez · Campus Quest · Track D
 
-Op mijn laptop kon ik in de eerste versie geen foto’s in de app bewaren. De bediening was te veel op een telefoon gericht. Ik had ook enkele beelden onder het verkeerde klasse-label gezet. In de nieuwe fotostand zie ik per klasse hoeveel bestanden echt op schijf staan. De eerste reeks bleef lokaal bewaard. Vier duidelijke handuitsneden zijn geselecteerd als training voor **Overig**. Van de oude opnames wordt niets gebruikt als aparte testfoto.
+## Dataset
 
-In de eerste automatische sessie waren 26 foto’s met een zichtbare **L** onder **Overig** opgeslagen. Ze zijn apart gezet. In een aantal O-foto’s zat de hand dicht tegen het gezicht. De app gebruikt nu de handuitsnede. Een gedetecteerd gezicht aan de rand wordt afgedekt. Bij overlap met de hand wordt het beeld geweigerd. De handfilter hield 6 V-, 12 O-, 3 L- en 2 Overig-foto’s over. Met de aangepaste handvormregels werden daarvan 6 V-, 11 O-, 3 L- en 2 Overig-foto’s juist ingedeeld. Dit zijn controlecijfers op beelden die voor de aanpassing zijn bekeken. Gebruik nieuwe foto’s voor een onafhankelijke hertest van het getrainde model.
+Ik maakte zelf webcamfoto’s van de letters V, O en L en van andere handvormen. Ik varieerde de hoek, afstand en positie van mijn hand. Enkele oudere, bruikbare handuitsneden zijn hergebruikt nadat de labels en zichtbare inhoud waren gecontroleerd. Foto’s die onduidelijk waren of een verkeerde handvorm toonden, werden verplaatst of herlabeld. Het uiteindelijke TensorFlow.js-model is getraind met 30 beelden per klasse, dus 120 beelden in totaal. De ruwe foto’s zijn lokaal gebleven.
 
-| Klasse | Trainingsfoto’s | Onafhankelijke testfoto’s | Licht, hoek, achtergrond en hand |
+## Drie geconstateerde problemen
+
+| Situatie | Wat ging mis? | Wat paste ik aan? | Wat werd gecontroleerd? |
 | --- | --- | --- | --- |
-| V | … | … | … |
-| O | … | … | … |
-| L | … | … | … |
-| Overig | … | … | … |
+| O dicht tegen mijn gezicht | De hand was moeilijk los van het gezicht te herkennen. De eerste handvormcontrole kende slechts 1 van 12 behouden O-beelden aan O toe. | De app toont een handkader, weert overlap met het gezicht en gebruikt de uitsnede van de hand. De controle op O werd aangepast aan de ronde handvorm. | De aangepaste handvormcontrole kende 11 van 12 bestaande O-beelden aan O toe. |
+| L stond onder Overig | De trainingsset bevatte 26 eerdere L-opnames in Overig. Bij de laatste controle zaten er ook O’s tussen de L-foto’s en opnieuw L’s bij Overig. | Duidelijke beelden werden herlabeld en twijfelgevallen apart gezet. Daarna is het TensorFlow.js-model opnieuw getraind. | In de eerder behouden kleine reeks kende de aangepaste handvormcontrole 3 van 3 L-beelden aan L toe. De uiteindelijke export heeft vier klassen en gebruikt de handuitsnede. |
+| Een hand werd als gezicht afgedekt | Bij de echte webcam plaatste de oude gezichtsfilter een donker vak op de hand. De hand werd daardoor geweigerd. Zonder herkende hand bleef de preview bovendien donker. | De app gebruikt nu gezichtspunten om af te dekken. Het camerabeeld en een stippelkader blijven zichtbaar terwijl je je hand positioneert. | Op de echte webcam verscheen het camerabeeld en meldde de app na de aanpassing ‘Hand in beeld’. |
 
-## Drie echte modeltests
+De cijfers voor O en L komen van eerder bekeken foto’s en van de handvormcontrole. Ze zijn geen nauwkeurigheidscijfers voor het uiteindelijke TensorFlow.js-model op nieuwe testfoto’s.
 
-Gebruik de lokale evaluatiepagina om de originele foto’s te beoordelen. Test ook live op je smartphone. Noteer de voorspelling, zekerheid en hertest. Vervang een voorgestelde situatie als je daarin geen fout kunt aantonen.
+## Reflectie
 
-| Situatie | Verwachting | Waargenomen voorspelling en zekerheid | Aanpassing en hertest |
-| --- | --- | --- | --- |
-| V bij tegenlicht | De letter blijft herkenbaar | … | … |
-| Een ander gebaar, zoals twee vingers dicht tegen elkaar | Het model geeft geen punten voor V | … | … |
-| Een foto van de gevraagde letter op een scherm | Het scherm ontgrendelt geen letter | … | … |
-
-## Reflectie (maximaal 200 woorden)
-
-Mijn eerste fotoreeks had weinig variatie tussen de achtergronden en bevatte fout gelabelde opnames. Daardoor kon het model verbanden leren die niets met de handvorm te maken hebben. Ik heb die eerste reeks apart gehouden en wil voor de nieuwe klassen dezelfde variatie in licht, afstand en achtergrond gebruiken. Het spel vraagt letters in een vaste volgorde en controleert drie beelden. Een stilstaande foto van de juiste letter kan daardoor nog steeds werken. Ik zou een korte, willekeurige beweging vragen terwijl de handvorm zichtbaar blijft. Ik zou met echte handen en schermfoto’s testen hoeveel pogingen terecht worden aanvaard of geweigerd.
-
-Vul deze reflectie na je tests aan met wat je daadwerkelijk hebt gemeten en aangepast.
+Mijn foto’s komen vooral van mijn eigen hand, met dezelfde laptopcamera en grotendeels dezelfde achtergrond. Sommige reeksen zijn vlak na elkaar genomen. Daardoor kan het model het licht, de camerahoek of mijn hand leren herkennen en minder goed werken bij iemand anders. De fout gelabelde L-foto’s toonden ook hoe belangrijk een visuele controle is. De app kijkt nu naar een handuitsnede en vereist drie opeenvolgende voldoende zekere voorspellingen. Een foto of video van de juiste handvorm kan daar nog doorheen komen. Ik zou daarom na elke letter een willekeurige korte beweging vragen. Om die aanpak te beoordelen, zou ik echte gebaren en foto’s op een scherm vergelijken bij andere mensen en ander licht. Ik zou zowel onterecht toegekende punten als onterecht geweigerde echte gebaren tellen.

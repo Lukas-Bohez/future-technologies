@@ -46,9 +46,11 @@ export async function trainLocal(report, signal) {
   canvas.width = canvas.height = 224;
   const accepted = Object.fromEntries(labels.map(label => [label, 0]));
   try {
-    await readTrainingPhotos(async ({ label, index, position, count, image }) => {
+    await readTrainingPhotos(async ({ label, index, file, position, count, image }) => {
       report('Handfilter · ' + label + ' ' + (position + 1) + '/' + count);
-      if (filter.crop(image, canvas).status === 'hand') {
+      const alreadyCropped = file.startsWith('hand-');
+      if (alreadyCropped) canvas.getContext('2d').drawImage(image, 0, 0, 224, 224);
+      if (alreadyCropped || filter.crop(image, canvas).status === 'hand') {
         await model.addExample(index, canvas);
         accepted[label]++;
         if (accepted[label] >= TRAINING_MINIMUM) return false;

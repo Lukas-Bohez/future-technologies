@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS scores (
+  device TEXT PRIMARY KEY,
+  payload TEXT NOT NULL,
+  revision INTEGER NOT NULL
+);

@@ -112,6 +112,7 @@ export async function handleDataset(request, response, origin) {
   const { searchParams } = new URL(request.url, origin);
   const split = searchParams.get('split');
   const label = searchParams.get('label');
+  const cropped = searchParams.get('view') === 'hand';
   if (!splits.includes(split) || !labels.includes(label)) {
     json(response, 400, { error: 'Onbekende fotoset of klasse.' });
     return;
@@ -133,7 +134,7 @@ export async function handleDataset(request, response, origin) {
     return;
   }
   const folder = new URL(split + '/' + label + '/', root);
-  const filename = label.toLowerCase() + '-' + Date.now() + '-' + randomUUID().slice(0, 8) + '.jpg';
+  const filename = (cropped ? 'hand-' : '') + label.toLowerCase() + '-' + Date.now() + '-' + randomUUID().slice(0, 8) + '.jpg';
   await mkdir(folder, { recursive: true });
   await writeFile(new URL(filename, folder), photo, { flag: 'wx' });
   json(response, 201, { filename, counts: await countPhotos() });

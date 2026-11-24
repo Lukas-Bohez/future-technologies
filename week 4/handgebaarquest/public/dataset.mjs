@@ -81,7 +81,7 @@ async function savePhoto(split, label, signal) {
   if (clearOtherLetter) return { guidance: 'Dit lijkt duidelijk op ' + clearOtherLetter.className + '. Volg het voorbeeld voor ' + label + '.' };
   const photo = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.88));
   if (!photo) throw new Error('Het beeld kon niet worden opgeslagen.');
-  const saved = await api('?' + new URLSearchParams({ split, label }), photo, signal);
+  const saved = await api('?' + new URLSearchParams({ split, label, view: 'hand' }), photo, signal);
   if (latest) URL.revokeObjectURL(latest);
   latest = URL.createObjectURL(photo);
   get('recent').src = latest;
@@ -167,6 +167,10 @@ get('audit').addEventListener('click', async () => {
     const retained = Object.fromEntries(labels.map(label => [label, { total: 0, matches: 0 }]));
     await readTrainingPhotos(({ label, file, position, count, image }) => {
       message('Foto’s controleren · ' + label + ' ' + (position + 1) + '/' + count);
+      if (file.startsWith('hand-')) {
+        retained[label].cropped = (retained[label].cropped ?? 0) + 1;
+        return;
+      }
       const result = audit.crop(image, output);
       if (result.status !== 'hand') {
         excluded.push({ label, file });
@@ -185,7 +189,10 @@ get('audit').addEventListener('click', async () => {
     if (!response.ok) throw new Error(result.error);
     updateCounts(result.counts);
     message(result.moved + ' foto’s verplaatst naar trainingdata/nakijken. Handvormcontrole op behouden trainingsfoto’s: ' +
-      labels.map(label => label + ' ' + retained[label].matches + '/' + retained[label].total).join(' · ') + '.');
+      labels.map(label => {
+        const row = retained[label];
+        return label + ' ' + row.matches + '/' + row.total + (row.cropped ? ' (+' + row.cropped + ' reeds uitgesneden)' : '');
+      }).join(' · ') + '.');
   } catch (error) {
     message('Fotocontrole kon niet afronden. ' + error.message);
   } finally {
