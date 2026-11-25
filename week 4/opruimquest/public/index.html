@@ -6,8 +6,6 @@
   <meta name="theme-color" content="#141b29">
   <title>Opruimquest · Campus Quest</title>
   <link rel="stylesheet" href="./style.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.3/dist/teachablemachine-image.min.js"></script>
   <script type="module" src="./app.mjs"></script>
 </head>
 <body>
@@ -17,6 +15,18 @@
       <div class="score" aria-live="polite"><strong id="points">–</strong><span>punten</span></div>
     </header>
     <p class="intro">Scan een rommelige stoelopstelling, ruim op en scan dezelfde plek opnieuw. Een geslaagde ronde levert 10 punten op.</p>
+    <p id="file-help" class="notice" hidden>Start eerst het bestand <strong>Start lokaal.cmd</strong> in de projectmap. Open daarna de <a href="http://127.0.0.1:4174/?preview=1">lokale teststand</a>.</p>
+    <div id="preview-controls" class="notice" hidden>
+      <p><strong>Teststand</strong> · Deze scores komen uit een simulatie. Testpunten zijn apart van je echte punten.</p>
+      <label for="preview-class">Gesimuleerde voorspelling</label>
+      <select id="preview-class">
+        <option value="rommelig">Rommelig (97%)</option>
+        <option value="netjes">Netjes (97%)</option>
+        <option value="onzeker">Onzeker (50%)</option>
+      </select>
+      <button id="preview-camera" class="secondary" type="button">Test ook de webcam</button>
+    </div>
+    <p id="preview-link" class="notice" hidden>Je kunt de stappen alvast doorlopen in de <a href="?preview=1">teststand met gesimuleerde voorspellingen</a>.</p>
     <ol class="steps" aria-label="Voortgang">
       <li id="before-step" aria-current="step">Vóór het opruimen</li>
       <li id="after-step">Na het opruimen</li>
@@ -37,5 +47,11 @@
     </section>
     <p class="privacy">Beelden worden op dit toestel verwerkt. De server bewaart alleen je punten en een willekeurige toestelcode om je score terug te vinden.</p>
   </main>
+  <script>
+    if (location.protocol === 'file:') {
+      document.getElementById('file-help').hidden = false;
+      document.getElementById('action').disabled = true;
+    }
+  </script>
 </body>
 </html>

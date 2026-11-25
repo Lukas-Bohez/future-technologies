@@ -1,0 +1,29 @@
+Campus Quest – AutoML
+Lukas Bohez - Week 4
+
+Video – What is AutoML? (Microsoft Learn, 3 min. 20 sec.)
+https://learn.microsoft.com/en-us/shows/dev-intro-to-data-science/what-is-automl-6-of-28
+
+Ik koos deze video omdat hij in ruim drie minuten uitlegt hoe AutoML werkt.
+
+Wat is AutoML?
+AutoML staat voor Automated Machine Learning.
+Je kiest wat je wilt voorspellen en levert de gegevens aan.
+De tool traint verschillende modellen met verschillende instellingen.
+Daarna vergelijkt de tool de modellen op aparte validatiegegevens.
+
+AutoML of een eigen model?
+Met AutoML heb je snel een eerste model om mee te werken, omdat je de instellingen niet één voor één zelf hoeft uit te proberen. Je keuze hangt wel af van wat de tool ondersteunt.
+Bij een eigen model heb je meer controle. Voor een spamfilter kun je bijvoorbeeld expliciet instellen dat een gewone mail blokkeren zwaarder doorweegt dan een spambericht doorlaten.
+Zelf een model bouwen en afstellen kost wel meer tijd en kennis.
+
+Overfitting en underfitting
+Stel dat op bijna alle trainingsfoto’s van honden gras te zien is.
+Bij overfitting kan het model gras met honden gaan associëren. Het scoort dan goed op de trainingsfoto’s, maar kan een kat op een gazon voor een hond aanzien.
+Bij underfitting leert het model te weinig om katten en honden uit elkaar te houden. Het maakt dan veel fouten op zowel de trainingsfoto’s als op nieuwe foto’s.
+
+Bronnen voor overfitting en underfitting
+Google – Overfitting
+https://developers.google.com/machine-learning/crash-course/overfitting/overfitting
+StatQuest – Bias and Variance
+https://www.youtube.com/watch?v=EuBBz3bI-aA

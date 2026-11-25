@@ -8,9 +8,13 @@ Ik gebruikte OpenAI Codex. Ik plakte de lescontext en de volledige opdracht voor
 
 Deze verantwoording gaat over deel 2, het eigen AI-checkpoint.
 
+Toen de webpagina via `file://` niet startte, vroeg ik Codex om ze op mijn pc te kunnen uittesten.
+
 ## Wat leverde Codex op?
 
 Codex koos track C en maakte de webpagina met lokale beeldherkenning, een vóór- en nascan en een koppeling met Netlify voor de punten. Codex koos een drempel van 90%, drie opeenvolgende beelden per scan en minimaal drie seconden tussen twee scans. Het leverde ook de eerste README en een invulblad voor praktijktests. De modelmap bevat bij deze oplevering alleen een instructiebestand.
+
+Codex voegde een lokale server en een teststand toe. Het controleerde in de browser dat een onzekere simulatie werd geweigerd en dat 10 testpunten na herladen zichtbaar bleven. De simulatie is een controle van de app. De praktijktests met het getrainde beeldmodel moeten apart gebeuren.
 
 ## Wat deed of wijzigde ik zelf?
 

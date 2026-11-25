@@ -2,6 +2,7 @@
   "name": "opruimquest",
   "version": "1.0.0",
   "private": true,
+  "scripts": { "start": "node server/local.mjs" },
   "engines": { "node": ">=22.13.0" },
   "dependencies": { "@netlify/blobs": "11.1.7" }
 }

@@ -1,11 +1,14 @@
-import { judgeScan, THRESHOLD } from './quest.mjs';
+import { judgeScan } from './quest.mjs';
 
 const ui = Object.fromEntries(
-  ['points', 'before-step', 'after-step', 'camera', 'camera-placeholder', 'messy', 'tidy', 'status', 'action', 'stop']
+  ['points', 'before-step', 'after-step', 'camera', 'camera-placeholder', 'messy', 'tidy', 'status', 'action', 'stop',
+    'preview-controls', 'preview-class', 'preview-camera', 'preview-link']
     .map(id => [id, document.getElementById(id)]),
 );
-const storageKey = 'opruimquest-device';
-const pendingKey = 'opruimquest-pending';
+const local = ['127.0.0.1', 'localhost'].includes(location.hostname);
+const preview = local && new URLSearchParams(location.search).get('preview') === '1';
+const storageKey = preview ? 'opruimquest-preview-device' : 'opruimquest-device';
+const pendingKey = preview ? 'opruimquest-preview-pending' : 'opruimquest-pending';
 const canvas = document.createElement('canvas');
 canvas.width = canvas.height = 224;
 const ctx = canvas.getContext('2d');
@@ -26,7 +29,10 @@ function updateControls() {
   ui.action.disabled = busy;
   ui.stop.disabled = busy;
   ui.stop.hidden = !stream;
-  ui.action.textContent = pending ? 'Punten opnieuw opslaan' : !stream ? 'Start camera' : before ? 'Scan na het opruimen' : 'Scan vóór het opruimen';
+  ui['preview-camera'].hidden = Boolean(stream);
+  ui['preview-camera'].disabled = busy;
+  ui['preview-class'].disabled = busy;
+  ui.action.textContent = pending ? 'Punten opnieuw opslaan' : !stream && !preview ? 'Start camera' : before ? 'Scan na het opruimen' : 'Scan vóór het opruimen';
   ui['before-step'].setAttribute('aria-current', before || pending ? 'false' : 'step');
   ui['after-step'].setAttribute('aria-current', before || pending ? 'step' : 'false');
 }
@@ -40,9 +46,28 @@ function stopCamera() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = () => {
+      script.remove();
+      reject(new Error('De modelbibliotheek kon niet laden. Controleer je internetverbinding.'));
+    };
+    document.head.append(script);
+  });
+}
+
 async function getModel() {
   if (model) return model;
-  if (!globalThis.tmImage) throw new Error('De modelbibliotheek kon niet laden. Herlaad de pagina met internetverbinding.');
+  const files = await Promise.all(['model.json', 'metadata.json'].map(name =>
+    fetch('./model/' + name, { method: 'HEAD', cache: 'no-store' })));
+  if (files.some(file => !file.ok)) {
+    throw new Error('Voeg eerst je TensorFlow.js-export toe in public/model.');
+  }
+  if (!globalThis.tf) await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js');
+  if (!globalThis.tmImage) await loadScript('https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.3/dist/teachablemachine-image.min.js');
   try {
     const loaded = await globalThis.tmImage.load('./model/model.json', './model/metadata.json');
     const labels = loaded.getClassLabels().map(label => label.trim().toLowerCase());
@@ -57,9 +82,9 @@ async function getModel() {
 }
 
 async function startCamera() {
-  if (!navigator.mediaDevices?.getUserMedia) throw new Error('Open de HTTPS-link in je smartphonebrowser om de camera te gebruiken.');
-  setStatus('Model laden en camera starten…');
-  await getModel();
+  if (!navigator.mediaDevices?.getUserMedia) throw new Error('Open de lokale serverlink op je pc of gebruik HTTPS op je smartphone.');
+  setStatus(preview ? 'Webcam starten…' : 'Model laden en camera starten…');
+  if (!preview) await getModel();
   try {
     const acquired = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } },
@@ -75,7 +100,8 @@ async function startCamera() {
     if (!pageActive || stream !== acquired) return;
     ui.camera.hidden = false;
     ui['camera-placeholder'].hidden = true;
-    setStatus(before ? 'Richt de camera op dezelfde plek na het opruimen.' : 'Richt de camera op de rommelige stoelopstelling.');
+    setStatus(preview ? 'Webcam werkt. De teststand blijft voorspellingen simuleren.' :
+      before ? 'Richt de camera op dezelfde plek na het opruimen.' : 'Richt de camera op de rommelige stoelopstelling.');
   } catch {
     stopCamera();
     throw new Error('Camera niet beschikbaar. Controleer de cameratoestemming in je browser.');
@@ -83,6 +109,13 @@ async function startCamera() {
 }
 
 async function classifyFrame() {
+  if (preview) {
+    const selected = ui['preview-class'].value;
+    return ['rommelig', 'netjes'].map(className => ({
+      className,
+      probability: selected === 'onzeker' ? 0.5 : selected === className ? 0.97 : 0.03,
+    }));
+  }
   if (!ui.camera.videoWidth || ui.camera.readyState < 2) throw new Error('De camera is nog niet klaar. Probeer opnieuw.');
   const { videoWidth: width, videoHeight: height } = ui.camera;
   const crop = Math.min(width, height);
@@ -162,8 +195,21 @@ ui.action.addEventListener('click', async () => {
   try {
     if (!device) initializeDevice();
     if (pending) await savePending();
-    else if (stream) await scan();
+    else if (stream || preview) await scan();
     else await startCamera();
+  } catch (error) {
+    setStatus(error.message);
+  } finally {
+    busy = false;
+    updateControls();
+  }
+});
+
+ui['preview-camera'].addEventListener('click', async () => {
+  busy = true;
+  updateControls();
+  try {
+    await startCamera();
   } catch (error) {
     setStatus(error.message);
   } finally {
@@ -197,6 +243,12 @@ function initializeDevice() {
 }
 
 async function initialize() {
+  ui['preview-controls'].hidden = !preview;
+  ui['preview-link'].hidden = !local || preview;
+  if (preview) {
+    ui['camera-placeholder'].textContent = 'Simulatie is actief';
+    setStatus('Kies Rommelig en maak de vóórscan.');
+  }
   busy = true;
   updateControls();
   try {
