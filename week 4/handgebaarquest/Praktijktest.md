@@ -16,6 +16,12 @@ Ik maakte zelf webcamfoto’s van de letters V, O en L en van andere handvormen.
 
 De cijfers voor O en L komen van eerder bekeken foto’s en van de handvormcontrole. Ze zijn geen nauwkeurigheidscijfers voor het uiteindelijke TensorFlow.js-model op nieuwe testfoto’s.
 
+## Test met een klasgenoot
+
+Ik filmde met mijn smartphone terwijl een klasgenoot de app op mijn laptop probeerde. De V van mijn klasgenoot werd aanvankelijk niet meteen geregistreerd. Toen ik zelf een V maakte, lukte het wel. Met twee mensen voor de webcam kwam soms ook mijn hand met de telefoon in beeld. De gezichtsafdekking was zichtbaar. Bij een andere positie en belichting zag ik dat de app een L even als V weergaf. Later verscheen ‘VOL gespeld’. Dit was een praktijktest met enkele pogingen, dus ik kan er geen algemene nauwkeurigheid uit afleiden.
+
 ## Reflectie
 
-Mijn foto’s komen vooral van mijn eigen hand, met dezelfde laptopcamera en grotendeels dezelfde achtergrond. Sommige reeksen zijn vlak na elkaar genomen. Daardoor kan het model het licht, de camerahoek of mijn hand leren herkennen en minder goed werken bij iemand anders. De fout gelabelde L-foto’s toonden ook hoe belangrijk een visuele controle is. De app kijkt nu naar een handuitsnede en vereist drie opeenvolgende voldoende zekere voorspellingen. Een foto of video van de juiste handvorm kan daar nog doorheen komen. Ik zou daarom na elke letter een willekeurige korte beweging vragen. Om die aanpak te beoordelen, zou ik echte gebaren en foto’s op een scherm vergelijken bij andere mensen en ander licht. Ik zou zowel onterecht toegekende punten als onterecht geweigerde echte gebaren tellen.
+Mijn klasgenoot kreeg de V minder makkelijk herkend dan ik. Op mijn trainingsfoto’s staat vooral mijn eigen hand, met dezelfde laptopcamera en vaak bij dezelfde achtergrond en belichting. Toen ik filmde, kwam ook mijn hand met de telefoon in beeld. Met twee mensen was het moeilijker om de juiste hand vrij in het kader te houden. De app dekte gezichten af, maar een L werd bij een andere positie en belichting even als V weergegeven. Uiteindelijk lukte het wel om VOL te spellen.
+
+Ik zou opnieuw trainen met handen van verschillende mensen, bij ander licht en vanuit meerdere hoeken. Om punten halen met een foto of opname moeilijker te maken, zou ik na een letter een willekeurige korte beweging vragen en controleren of dezelfde hand die uitvoert. Daarna zou ik testen hoeveel echte gebaren en pogingen met een foto of video terecht worden aanvaard of geweigerd.

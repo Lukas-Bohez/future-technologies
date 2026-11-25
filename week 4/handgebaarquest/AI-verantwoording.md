@@ -12,4 +12,6 @@ Enkele letterlijke fragmenten uit mijn prompts:
 
 > camera is gewoon zwart, dit werkt echt voor geen meter, fix dit aub
 
-Ik koos het onderwerp, maakte webcamfoto’s, volgde de voorbeelden in de fotostand, testte de app op mijn pc en nam de pc-demo op. Ik gaf concrete feedback over de labels, herkenning en webcam. Codex bouwde en verbeterde de app en puntenopslag, hielp foto’s controleren en herlabelen, voegde het handkader toe, trainde en exporteerde met mijn bewaarde beelden, en stelde het verslag op uit de vastgestelde problemen. De demo is bijgesneden uit mijn oorspronkelijke pc-opname. De illustraties van de handvormen komen van het Vlaams GebarentaalCentrum.
+Ik koos het onderwerp, maakte webcamfoto’s, volgde de voorbeelden in de fotostand, testte de app op mijn pc en nam een eerste pc-demo op. Ik gaf concrete feedback over de labels, herkenning en webcam. Codex bouwde en verbeterde de app en puntenopslag, hielp foto’s controleren en herlabelen, voegde het handkader toe, trainde en exporteerde met mijn bewaarde beelden, en stelde het verslag op uit de vastgestelde problemen. De illustraties van de handvormen komen van het Vlaams GebarentaalCentrum.
+
+Daarna filmde ik met mijn smartphone terwijl een klasgenoot de app op mijn laptop probeerde. Ik vroeg Codex om te gebruiken wat ik tijdens de opname vertelde. Codex maakte een lokale transcriptie, verwerkte mijn observaties in de reflectie en kortte deze nieuwe opname in voor de indiening.

@@ -1,0 +1,12 @@
+Campus Quest – Handgebaarquest (track D)
+Lukas Bohez
+
+Repository en README
+https://github.com/Lukas-Bohez/future-technologies/tree/main/week%204/handgebaarquest
+
+Live app
+https://handgebaarquest.autumnape16.chatgpt.site
+
+Handgebaarquest is een oefening met het Vlaamse handalfabet. Via je camera spel je VOL. De app geeft punten als een letter drie keer na elkaar met minstens 90% zekerheid herkend wordt. De app verwerkt de beelden op het toestel. Ik verzamelde eigen webcamfoto’s en gebruikte 30 voorbeelden per klasse voor V, O, L en Overig.
+
+In Handgebaarquest.zip zitten de projectcode, de TensorFlow.js-export, het testverslag met reflectie, mijn AI-verantwoording en de demo van 1 minuut en 51 seconden. In de demo probeert een klasgenoot de app op mijn laptop terwijl ik film met mijn smartphone. In mijn reflectie bespreek ik de herkenning bij een andere hand, meerdere mensen in beeld en ander licht.
